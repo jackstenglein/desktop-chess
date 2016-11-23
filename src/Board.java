@@ -200,10 +200,10 @@ public class Board {
 		movedPiece.setCol(dest.getCol());
 		movedPiece.incrementTimesMoved();
 		movedPiece.setHasJustMoved(true);
-		System.out.println("Moved piece: " + movedPiece);
+		//System.out.println("Moved piece: " + movedPiece);
 
 		dest.setPiece(movedPiece);
-		System.out.println("New space: " + dest);
+		//System.out.println("New space: " + dest);
 	}
 
 	/**
@@ -219,7 +219,7 @@ public class Board {
 	 */
 	private void castle(Space source, Space dest) {
 		
-		System.out.println("CASTLE");
+		//System.out.println("CASTLE");
 
 		// check preconditions
 		if (source == null || dest == null)
@@ -433,7 +433,7 @@ public class Board {
 	 */
 	private void uncastle(Space source, Space dest) {
 		
-		System.out.println("UNCASTLE");
+		// System.out.println("UNCASTLE");
 
 		// check preconditions
 		if (source == null || dest == null)

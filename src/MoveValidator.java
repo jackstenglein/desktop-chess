@@ -20,7 +20,7 @@ public class MoveValidator {
 	 */
 	public static ArrayList<Piece> findDefendingPieces(Piece piece, Board board) {
 
-		System.out.println("Find defending pieces.");
+		// System.out.println("Find defending pieces.");
 
 		// check precondition
 		if (piece == null || board == null)
@@ -66,7 +66,7 @@ public class MoveValidator {
 	 */
 	public static ArrayList<Piece> findAttackedPieces(Piece piece, Board board) {
 
-		System.out.println("Find attacked pieces.");
+		// System.out.println("Find attacked pieces.");
 
 		// check preconditions
 		if (piece == null || board == null)
@@ -99,7 +99,7 @@ public class MoveValidator {
 	 *            The Board to search. May not be null.
 	 */
 	public static ArrayList<Piece> findPiecesAttackingSpace(Space spaceToCheck, boolean isWhite, Board board) {
-		System.out.println("Find pieces attacking space.");
+		// System.out.println("Find pieces attacking space.");
 
 		// check precondition
 		if (spaceToCheck == null || board == null)
@@ -143,7 +143,7 @@ public class MoveValidator {
 	 * @return An ArrayList of Pieces attacking the specified Piece.
 	 */
 	public static ArrayList<Piece> findPiecesAttackingPiece(Piece piece, Board board) {
-		System.out.println("Find pieces attacking piece.");
+		// System.out.println("Find pieces attacking piece.");
 
 		// check precondition
 		if (piece == null || board == null)
@@ -168,7 +168,7 @@ public class MoveValidator {
 	 * @return An ArrayList of all legal Moves for the given Piece and Board.
 	 */
 	public static ArrayList<Move> findLegalMoves(Piece piece, Board board, boolean checkCastling) {
-		System.out.println("Find legal moves.");
+		// System.out.println("Find legal moves.");
 		ArrayList<Move> legalMoves = findAvailableMoves(piece, board, checkCastling);
 		removeSameColoredMoves(legalMoves, piece.isWhite());
 		for (int i = 0; i < legalMoves.size(); i++)
@@ -198,7 +198,7 @@ public class MoveValidator {
 	 *         regardless of the color of capture.
 	 */
 	private static ArrayList<Move> findAvailableMoves(Piece piece, Board board, boolean checkCastling) {
-		System.out.println("Find available moves.");
+		//System.out.println("Find available moves.");
 
 		// check precondition
 		if (piece == null || board == null)
@@ -250,7 +250,7 @@ public class MoveValidator {
 	 *            A boolean indicating whether the moved Piece is white or not.
 	 */
 	private static void removeSameColoredMoves(ArrayList<Move> availableMoves, boolean pieceIsWhite) {
-		System.out.println("Remove same colored moves.");
+		//System.out.println("Remove same colored moves.");
 
 		// check precondition
 		if (availableMoves == null)
@@ -290,7 +290,7 @@ public class MoveValidator {
 	 */
 	private static ArrayList<Move> findAvailablePawnMoves(int pieceRow, int pieceCol, boolean pieceIsWhite,
 			Board board) {
-		System.out.println("Find available pawn moves.");
+		//System.out.println("Find available pawn moves.");
 
 		ArrayList<Move> availablePawnMoves = new ArrayList<Move>();
 		Space source = board.getSpace(pieceRow, pieceCol);
@@ -371,12 +371,12 @@ public class MoveValidator {
 		// check for en passant to the right
 		Space spaceRight = board.getSpace(pieceRow, pieceCol + 1);
 		if (spaceRight != null) {
-			System.out.println("Check en passant right");
+			//System.out.println("Check en passant right");
 			Piece pieceRight = spaceRight.getPiece();
-			System.out.println("Piece right: " + pieceRight);
+			//System.out.println("Piece right: " + pieceRight);
 			if (pieceRow == magicRow && pieceRight != null && pieceRight.getType() == Piece.TYPE_PAWN
 					&& pieceRight.getTimesMoved() == 1 && pieceRight.hasJustMoved()) {
-				System.out.println("found en passant.");
+				//System.out.println("found en passant.");
 				return new Move(pawn, pieceRight, source, board.getSpace(pieceRow + rowChange, pieceCol + 1));
 			}
 		}
@@ -387,7 +387,7 @@ public class MoveValidator {
 			Piece pieceLeft = spaceLeft.getPiece();
 			if (pieceRow == magicRow && pieceLeft != null && pieceLeft.getType() == Piece.TYPE_PAWN
 					&& pieceLeft.getTimesMoved() == 1 && pieceLeft.hasJustMoved()) {
-				System.out.println("found en passant.");
+				//System.out.println("found en passant.");
 				return new Move(pawn, pieceLeft, source, board.getSpace(pieceRow + rowChange, pieceCol - 1));
 			}
 		}
@@ -407,7 +407,7 @@ public class MoveValidator {
 	 * @return An ArrayList of Moves the knight can make.
 	 */
 	private static ArrayList<Move> findAvailableKnightMoves(Piece knight, Board board) {
-		System.out.println("Find available knight moves.");
+		//System.out.println("Find available knight moves.");
 		ArrayList<Move> availableKnightMoves = new ArrayList<Move>();
 
 		// Eight positions to check for a knight,
@@ -471,7 +471,7 @@ public class MoveValidator {
 	 * @return An ArrayList of Moves the bishop can make.
 	 */
 	private static ArrayList<Move> findAvailableBishopMoves(Piece bishop, Board board) {
-		System.out.println("Find available bishop moves.");
+		//System.out.println("Find available bishop moves.");
 		ArrayList<Move> availableBishopMoves = new ArrayList<Move>();
 
 		// Four diagonals to check for a bishop; will start
@@ -512,7 +512,7 @@ public class MoveValidator {
 	 * @return An ArrayList of Moves the rook can make.
 	 */
 	private static ArrayList<Move> findAvailableRookMoves(Piece rook, Board board) {
-		System.out.println("Find available rook moves");
+		//System.out.println("Find available rook moves");
 		ArrayList<Move> availableRookMoves = new ArrayList<Move>();
 
 		// Two verticals, two horizontals to check for a rook; will
@@ -553,7 +553,7 @@ public class MoveValidator {
 	 * @return An ArrayList of Moves the queen can make.
 	 */
 	private static ArrayList<Move> findAvailableQueenMoves(Piece queen, Board board) {
-		System.out.println("Find available queen moves");
+		//System.out.println("Find available queen moves");
 		ArrayList<Move> availableQueenMoves = new ArrayList<Move>();
 
 		// A queen moves like a rook and a bishop combined
@@ -577,7 +577,7 @@ public class MoveValidator {
 	 * @return An ArrayList of Moves the king can make.
 	 */
 	private static ArrayList<Move> findAvailableKingMoves(Piece king, Board board, boolean checkCastling) {
-		System.out.println("Find available king moves");
+		//System.out.println("Find available king moves");
 		ArrayList<Move> availableKingMoves = new ArrayList<Move>();
 
 		// A king can move to each of the eight surrounding squares
@@ -679,7 +679,7 @@ public class MoveValidator {
 	 * @return An ArrayList of available Moves for the Piece.
 	 */
 	private static ArrayList<Move> findAvailableLoopMoves(Piece piece, int rowChange, int colChange, Board board) {
-		System.out.println("Find available loop moves.");
+		//System.out.println("Find available loop moves.");
 
 		// check preconditions
 		if (!((rowChange == -1 || rowChange == 0 || rowChange == 1)
@@ -735,7 +735,7 @@ public class MoveValidator {
 	// pre: board != null
 	public static boolean isCheckMate(boolean isWhite, Board board) {
 
-		System.out.println("is Check Mate");
+		//System.out.println("is Check Mate");
 
 		// check precondition
 		if (board == null)

@@ -32,24 +32,26 @@ public class AI
 		return isWhite_;
 	}
 	
-	public Space getSelectedSpace() {
+	public Piece getNextPiece() {
 		
 		
-		pieceToMove_ = aiPieces_.get((int)(Math.floor(Math.random()*aiPieces_.size())));
+		Piece piece = aiPieces_.get((int)(Math.floor(Math.random()*aiPieces_.size())));
 		
-		while(MoveValidator.findLegalMoves(pieceToMove_, board_, true).size() == 0)
+		while(MoveValidator.findLegalMoves(piece, board_, true).size() == 0)
 		{
-			pieceToMove_ = aiPieces_.get((int)(Math.floor(Math.random()*aiPieces_.size())));
+			piece = aiPieces_.get((int)(Math.floor(Math.random()*aiPieces_.size())));
 		}
 		
-		return board_.getSpace(pieceToMove_.getRow(), pieceToMove_.getCol());
+		System.out.println("Piece chosen by AI: " + piece);
+		return piece;
 	}
 	
-	public Move getNextMove()
+	public Move getNextMove(Piece piece)
 	{
-		
-		possibleMoves_.addAll(MoveValidator.findLegalMoves( pieceToMove_, board_, true) );
-		return possibleMoves_.get((int)Math.floor(Math.random() * possibleMoves_.size()));
+		possibleMoves_.addAll(MoveValidator.findLegalMoves( piece, board_, true) );
+		Move move = possibleMoves_.get((int)Math.floor(Math.random() * possibleMoves_.size()));
+		possibleMoves_.clear();
+		return move;
 	}
 	
 	private int[] computeValuesForMoves(Piece piece) 

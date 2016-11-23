@@ -20,6 +20,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	private static GraphicsController graphicsController_;
 	private Board board_;
 	private AI ai_;
+	private boolean isSinglePlayer;
 	private Timer timer_;
 	private Space selectedSpace_;
 	private ArrayList<Move> possibleMoves_;
@@ -60,7 +61,8 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		startTime_ = 300000;
 		board_ = new Board();
 		board_.setPieces(createPieces(false), createPieces(true));
-		ai_ = new AI(board_, true, 0);
+		ai_ = new AI(board_, false, 0);
+		isSinglePlayer = true;
 		timer_ = new Timer(startTime_);
 		graphicsController_ = new GraphicsController(board_);
 	}
@@ -166,22 +168,10 @@ public class Game implements MouseListener, Runnable, ActionListener {
 					timer_.decrementTime(threadDelay, isWhiteTurn_);
 
 					if (timer_.getRemainingTime(isWhiteTurn_) <= 0) {
-						isGameOver_ = true;
-						isGamePlaying_ = false;
-
-						String[] possibleValues = { "Close", "New Game" };
-						String message;
 						if (isWhiteTurn_)
-							message = "Black wins by timeout!";
+							gameOver("Black wins by timeout!");
 						else
-							message = "White wins by timeout!";
-
-						Object[] options = { "New Game", "Close" };
-						int selectedValue = JOptionPane.showOptionDialog(null, message, "Gave Over",
-								JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-
-						if (selectedValue == 0)
-							newGame();
+							gameOver("White wins by timeout!");
 					}
 				}
 
@@ -195,48 +185,66 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			System.out.println("GAME OVER");
 	}
 
+	/**
+	 * Helper method that displays a game over message with an option to start a new game or quit.
+	 * <br>pre: message != null
+	 * @param message
+	 */
+	private void gameOver(String message) {
+		
+		//check precondition
+		if(message == null)
+			throw new IllegalArgumentException("message may not be null.");
+		
+		isGameOver_ = true;
+		isGamePlaying_ = false;
+		Object[] options = { "New Game", "Close" };
+		int selectedValue = JOptionPane.showOptionDialog(null, message, "Gave Over", JOptionPane.DEFAULT_OPTION,
+				JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+		if (selectedValue == 0)
+			newGame();
+	}
+
 	// switches the turn from black to white and vice versa
 	// pre: none
 	private void switchTurns() {
 		timer_.incrementTime(timeBack_, isWhiteTurn_);
 		isWhiteTurn_ = !isWhiteTurn_;
 		if (MoveValidator.isCheckMate(isWhiteTurn_, board_)) {
-			isGameOver_ = true;
-			isGamePlaying_ = false;
-
-			String[] possibleValues = { "Close", "New Game" };
-			String message;
 			if (isWhiteTurn_)
-				message = "Black wins by checkmate!";
+				gameOver("Black wins by checkmate!");
 			else
-				message = "White wins by checkmate!";
-
-			Object[] options = { "New Game", "Close" };
-			int selectedValue = JOptionPane.showOptionDialog(null, message, "Gave Over", JOptionPane.DEFAULT_OPTION,
-					JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-
-			if (selectedValue == 0)
-				newGame();
+				gameOver("White wins by checkmate!");
+		} else if (isSinglePlayer && isWhiteTurn_ == ai_.isWhite()) {
+			System.out.println("AI is making the next move: ");
+			Move move = ai_.getNextMove(ai_.getNextPiece());
+			System.out.println(move);
+			board_.makeOfficialMove(move);
+			switchTurns();
 		}
 	}
 
-	/*
-	 * Five cases for a user clicking the mouse: 1: They click a possible move
-	 * -Piece is moved -Selected space/move options disappear
+	/**
+	 * Five cases for a user clicking the mouse: <br>
+	 * 1: They click a possible move <br>
+	 * -Piece is moved <br>
+	 * -Selected space/move options disappear
 	 * 
+	 * <br>
 	 * 2: They click a space with a piece for the first time and it is that
-	 * color's turn -Selected space and move options appear for that piece -They
-	 * go away for other pieces
+	 * color's turn <br>
+	 * -Selected space and move options appear for that piece <br>
+	 * -They go away for other pieces
 	 * 
-	 * 3: They click an en passant move
+	 * <br>
+	 * 3: They click a space with a piece for the second time <br>
+	 * -Selected space and move options disappear for that piece
 	 * 
-	 * 4: They click a space with a piece for the second time -Selected space
-	 * and move options disappear for that piece
-	 * 
-	 * 5: They click an empty space that is not a move option -Selected space
-	 * and move options go away -Nothing else appears
-	 * 
-	 * 4 and 5 do not need own if statement
+	 * <br>
+	 * 4: They click an empty space that is not a move option <br>
+	 * -Selected space and move options go away <br>
+	 * -Nothing else appears
 	 */
 	@Override
 	public void mouseClicked(MouseEvent event) {
@@ -251,12 +259,15 @@ public class Game implements MouseListener, Runnable, ActionListener {
 				Space clickedSpace = board_.getSpace(row, col);
 				Piece piece = clickedSpace.getPiece();
 
-				/*if (piece != null) {
-					System.out.println("Clicked piece: " + piece);
-					System.out.println("Attacked pieces: " + MoveValidator.findAttackedPieces(piece, board_));
-					System.out.println("Attacking pieces: " + MoveValidator.findPiecesAttackingPiece(piece, board_));
-					System.out.println("Find defending pieces: " + MoveValidator.findDefendingPieces(piece, board_));
-				}*/
+				/*
+				 * if (piece != null) { System.out.println("Clicked piece: " +
+				 * piece); System.out.println("Attacked pieces: " +
+				 * MoveValidator.findAttackedPieces(piece, board_));
+				 * System.out.println("Attacking pieces: " +
+				 * MoveValidator.findPiecesAttackingPiece(piece, board_));
+				 * System.out.println("Find defending pieces: " +
+				 * MoveValidator.findDefendingPieces(piece, board_)); }
+				 */
 
 				// CASE 1
 				Move selectedMove = null;
@@ -267,8 +278,8 @@ public class Game implements MouseListener, Runnable, ActionListener {
 							break;
 						}
 				}
-				
-				if(selectedMove != null) {
+
+				if (selectedMove != null) {
 					board_.makeOfficialMove(selectedMove);
 					deselectAllSpaces();
 					switchTurns();
@@ -277,7 +288,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 				// CASE 2
 				else if (piece != null && clickedSpace != selectedSpace_
 						&& ((piece.isWhite() && isWhiteTurn_) || (!piece.isWhite() && !isWhiteTurn_))) {
-					System.out.println("CASE 2");
+					// System.out.println("CASE 2");
 					if (!isGamePlaying_)
 						isGamePlaying_ = true;
 
@@ -285,16 +296,9 @@ public class Game implements MouseListener, Runnable, ActionListener {
 					selectedSpace_ = clickedSpace;
 					selectedSpace_.setSelected(true);
 					highlightPossibleMoves(piece);
-				} else if (clickedSpace.equals(enPassantMove_)) {
-					System.out.println("CASE 3");
-					System.out.println("En passant move");
-					Piece piece2 = board_.getSpace(selectedSpace_.getRow(), clickedSpace.getCol()).getPiece();
-					moveSelectedPiece(clickedSpace, piece2);
-					deselectAllSpaces();
-					switchTurns();
 				} else {
-					// CASE 4 and CASE 5 covered here
-					System.out.println("CASE 4/5");
+					// CASE 3 and CASE 4 covered here
+					// System.out.println("CASE 3/4");
 					deselectAllSpaces();
 				}
 			}
@@ -312,11 +316,11 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			throw new IllegalArgumentException("Piece cannot be null");
 
 		possibleMoves_ = MoveValidator.findLegalMoves(piece, board_, true);
-		System.out.println("Available moves pre check: " + possibleMoves_);
+		// System.out.println("Available moves pre check: " + possibleMoves_);
 
 		for (int i = 0; i < possibleMoves_.size(); i++) {
 			Move move = possibleMoves_.get(i);
-			if(move.isCapture())
+			if (move.isCapture())
 				move.getDestination().setTakingMove(true);
 			else
 				move.getDestination().setPossibleMove(true);
@@ -376,89 +380,6 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		return col;
 	}
 
-	// move the piece at the selected space
-	// to the specified space
-	// pre: newSpace != null
-	private void moveSelectedPiece(Space newSpace, Piece capturedPiece) {
-		// check precondition
-		if (newSpace == null)
-			throw new IllegalArgumentException("newSpace cannot be null");
-
-		Piece pieceToMove = selectedSpace_.getPiece();
-		selectedSpace_.setPiece(null);
-		board_.setSpace(selectedSpace_.getRow(), selectedSpace_.getCol(), selectedSpace_);
-
-		// check if this is a castle
-		if (pieceToMove.getType() == Piece.TYPE_KING && ((pieceToMove.getCol() - newSpace.getCol()) == 2
-				|| (newSpace.getCol() - pieceToMove.getCol()) == 2)) {
-			// move the rook to the right spot
-
-			// first get the correct rook
-			if (pieceToMove.getCol() > newSpace.getCol()) {
-				Space rookSpace = board_.getSpace(pieceToMove.getRow(), Board.MIN_COL);
-				Piece rookToMove = rookSpace.getPiece();
-				rookSpace.setPiece(null);
-				board_.setSpace(rookSpace.getRow(), rookSpace.getCol(), rookSpace);
-
-				rookToMove.setCol(newSpace.getCol() + 1);
-				rookToMove.incrementTimesMoved();
-				Space newRookSpace = board_.getSpace(pieceToMove.getRow(), newSpace.getCol() + 1);
-				newRookSpace.setPiece(rookToMove);
-				board_.setSpace(newRookSpace.getRow(), newRookSpace.getCol(), newRookSpace);
-			} else {
-				Space rookSpace = board_.getSpace(pieceToMove.getRow(), Board.MAX_COL);
-				Piece rookToMove = rookSpace.getPiece();
-				rookSpace.setPiece(null);
-				board_.setSpace(rookSpace.getRow(), rookSpace.getCol(), rookSpace);
-
-				rookToMove.setCol(newSpace.getCol() - 1);
-				rookToMove.incrementTimesMoved();
-				Space newRookSpace = board_.getSpace(pieceToMove.getRow(), newSpace.getCol() - 1);
-				newRookSpace.setPiece(rookToMove);
-				board_.setSpace(newRookSpace.getRow(), newRookSpace.getCol(), newRookSpace);
-			}
-		}
-
-		if (capturedPiece != null) {
-			System.out.println("Captured piece set to captured");
-			board_.getSpace(capturedPiece.getRow(), capturedPiece.getCol()).setPiece(null);
-			board_.pieceLost(capturedPiece);
-		}
-
-		pieceToMove.setRow(newSpace.getRow());
-		pieceToMove.setCol(newSpace.getCol());
-		pieceToMove.incrementTimesMoved();
-		pieceToMove.setHasJustMoved(true);
-		System.out.println("Moved piece: " + pieceToMove);
-
-		newSpace.setPiece(pieceToMove);
-		System.out.println("New space: " + newSpace);
-		board_.setSpace(newSpace.getRow(), newSpace.getCol(), newSpace);
-
-		// set all other color's pieces' movedLastTurn to false
-		ArrayList<Piece> otherPieces;
-		if (pieceToMove.isWhite())
-			otherPieces = board_.getBlackPieces();
-		else
-			otherPieces = board_.getWhitePieces();
-
-		for (int i = 0; i < otherPieces.size(); i++)
-			otherPieces.get(i).setHasJustMoved(false);
-
-		// check if pawn needs promotion
-		if (pieceToMove.getType() == Piece.TYPE_PAWN
-				&& (pieceToMove.getRow() == Board.MIN_ROW || pieceToMove.getRow() == Board.MAX_ROW)) {
-			Object[] buttons = { "Knight", "Bishop", "Rook", "Queen" };
-			int selectedValue = JOptionPane.showOptionDialog(null, "Which piece would you like?", "Promote pawn",
-					JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, buttons, buttons[3]);
-
-			if (selectedValue > -1)
-				pieceToMove.setType(selectedValue + 2);
-			else
-				pieceToMove.setType(Piece.TYPE_QUEEN);
-		}
-	}
-
 	/**
 	 * Performs the various actions for the JMenuBarItems.
 	 */
@@ -466,9 +387,9 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		if (event.getActionCommand().equals("New Game"))
 			newGame();
 		else if (event.getActionCommand().equals("Single Player"))
-			System.out.println("TO DO--SINGLE PLAYER");
+			isSinglePlayer = true;
 		else if (event.getActionCommand().equals("Two Player"))
-			System.out.println("TO DO--TWO PLAYER");
+			isSinglePlayer = false;
 		else if (event.getActionCommand().equals("Quit"))
 			System.exit(0);
 		else if (event.getActionCommand().equals("5 min") && !isGamePlaying_) {
