@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AI 
 {
@@ -54,14 +56,59 @@ public class AI
 		return move;
 	}
 	
-	private int[] computeValuesForMoves(Piece piece) 
-	{
-		return null;
+	public Move getNextMove() {
+		ArrayList<Move> possibleMoves = getAllPossibleMoves();
+		Map<Move, Integer> moveValues = computeValuesForMoves(possibleMoves);
+		//System.out.println("MoveValues:\n" + moveValues);
+		
+		int max = Integer.MIN_VALUE;
+		Move maxMove = null;
+		for(Move move : moveValues.keySet()) {
+			if(moveValues.get(move) > max) {
+				max = moveValues.get(move);
+				maxMove = move;
+			}
+		}
+		
+		return maxMove;
 	}
 	
-	private int computeValueForBoardConfiguration()
+	private ArrayList<Move> getAllPossibleMoves() {
+		
+		ArrayList<Move> possibleMoves = new ArrayList<Move>();
+		for(int i = 0; i < aiPieces_.size(); i++) {
+			possibleMoves.addAll(MoveValidator.findLegalMoves(aiPieces_.get(i), board_, true));
+		}
+		
+		return possibleMoves;
+	}
+	
+	private Map<Move, Integer> computeValuesForMoves(ArrayList<Move> possibleMoves) {
+		Map<Move, Integer> moveValues = new HashMap<Move, Integer>();
+		for(int i = 0; i < possibleMoves.size(); i++) {
+			Move move = possibleMoves.get(i);
+			//System.out.println("Move: " + move + " Hash: " + move.hashCode());
+			board_.makeTestMove(move);
+			moveValues.put(move, computeValueForBoard());
+			board_.undoMove(move);
+		}
+		
+		System.out.println(moveValues);
+		
+		return moveValues;
+	}
+	
+	
+	private int computeValueForBoard()
 	{
-		return 0;
+		int value = 0;
+		
+		if(MoveValidator.isCheckMate(!isWhite_, board_))
+			return Integer.MAX_VALUE;
+		else
+			value += getMaterialDifference();
+		
+		return value;
 	}
 	
 	//takes a piece and a possibleMove and determines the forking value for the piece
@@ -119,10 +166,6 @@ public class AI
 		return average;
 	}
 	
-	private void movePiece(Piece piece, Space nextSpace)
-	{
-		
-	}
 	
 	//computes and returns the value of a trade between the two pieces
 	//based on their value and the total material each side has
@@ -166,22 +209,31 @@ public class AI
 		return valueForTrade;
 	}
 	
+	private int getMaterialDifference() {
+		int whiteMaterial = getTotalMaterial(true);
+		int blackMaterial = getTotalMaterial(false);
+		System.out.println("White material: " + whiteMaterial);
+		System.out.println("Black material: " + blackMaterial);
+		System.out.println("\n");
+		return isWhite_ ? whiteMaterial - blackMaterial : blackMaterial - whiteMaterial;
+	}
+	
 	//returns the value of all the material that the team has in play
 	//pre: none
 	private int getTotalMaterial(boolean white)
 	{
 		ArrayList<Piece> team;
 		if(white)
-			team = aiPieces_;
+			team = board_.getWhitePieces();
 		else
-			team = enemyPieces_;
+			team = board_.getBlackPieces();
 		
 		int totalMaterial = 0;
 		for(int i = 0; i < team.size(); i++)
 			if(!team.get(i).isCaptured())
 				totalMaterial += team.get(i).getValue();
 		
-		System.out.println("Total material for " + (white ? "white :" : "black :") + totalMaterial);
+		//System.out.println("Total material for " + (white ? "white :" : "black :") + totalMaterial);
 		return totalMaterial;
 	}
 	

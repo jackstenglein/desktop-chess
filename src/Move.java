@@ -167,15 +167,19 @@ public class Move {
 		return sb.toString();
 	}
 
-	/**
-	 * Returns true if other is a Move object with the same movedPiece,
-	 * capturedPiece, source and dest as this Move object. <br>
-	 * pre: none
-	 * 
-	 * @return A boolean indicating whether the two objects are equal
-	 */
-	public boolean equals(Object other) {
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((capturedPiece == null) ? 0 : capturedPiece.hashCode());
+		result = prime * result + ((dest == null) ? 0 : dest.hashCode());
+		result = prime * result + ((movedPiece == null) ? 0 : movedPiece.hashCode());
+		result = prime * result + ((source == null) ? 0 : source.hashCode());
+		return result;
+	}
 
+	@Override
+	public boolean equals(Object other) {
 		if (other instanceof Move) {
 			// safe to cast
 			Move otherMove = (Move) other;

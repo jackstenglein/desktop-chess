@@ -217,11 +217,9 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			else
 				gameOver("White wins by checkmate!");
 		} else if (isSinglePlayer && isWhiteTurn_ == ai_.isWhite()) {
-			System.out.println("AI is making the next move: ");
-			Move move = ai_.getNextMove(ai_.getNextPiece());
+			System.out.println("AI choice for next move: ");
+			Move move = ai_.getNextMove();
 			System.out.println(move);
-			board_.makeOfficialMove(move);
-			switchTurns();
 		}
 	}
 

@@ -327,6 +327,15 @@ public class Piece {
 		return baseString;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (isWhite_ ? 1231 : 1237);
+		result = prime * result + type_;
+		return result;
+	}
+
 	/**
 	 * Returns a boolean indicating whether this Piece is equal to the passed
 	 * Object. The two Objects are equal if other is a Piece object of the same
