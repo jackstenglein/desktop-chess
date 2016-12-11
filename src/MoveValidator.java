@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MoveValidator {
 	// class constants
@@ -49,7 +50,8 @@ public class MoveValidator {
 					break;
 				}
 		}
-
+		
+		Collections.sort(defenders);
 		return defenders;
 	}
 
@@ -82,6 +84,7 @@ public class MoveValidator {
 				piecesAttacked.add(pieceMoves.get(i).getCapturedPiece());
 		}
 
+		Collections.sort(piecesAttacked);
 		return piecesAttacked;
 	}
 
@@ -128,6 +131,7 @@ public class MoveValidator {
 			}
 		}
 
+		Collections.sort(piecesAttacking);
 		return piecesAttacking;
 	}
 

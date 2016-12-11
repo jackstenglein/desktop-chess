@@ -3,7 +3,7 @@
  * 
  * @author jstenglein 11/19/16
  */
-public class Piece {
+public class Piece implements Comparable<Piece> {
 
 	// class constants
 	public static final int TYPE_PAWN = 1;
@@ -360,5 +360,15 @@ public class Piece {
 		}
 
 		return false;
+	}
+
+	@Override
+	public int compareTo(Piece other) {
+		if(getValue() < other.getValue())
+			return -1;
+		else if(getValue() > other.getValue())
+			return 1;
+		
+		return 0;
 	}
 }
