@@ -15,29 +15,46 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	public static final int WIDTH = 512;
 	public static final int HEIGHT = 596;
 	public static final String TITLE = "Chess by Jack Stenglein";
+	public static final int DEFAULT_GAME_TIME = 300_000; // 5 minutes
+	public static final int BOARD_SIDE_LENGTH = 512;
+	public static final int SPACE_SIDE_LENGTH = 64;
+	
+	// menu options
+	public static final String NEW_GAME_OPTION = "New Game";
+	public static final String SINGLE_PLAYER_OPTION = "Single Player";
+	public static final String TWO_PLAYER_OPTION = "Two Player";
+	public static final String QUIT_OPTION = "Quit";
+	public static final String FIVE_MIN_OPTION = "5 min";
+	public static final String TEN_MIN_OPTION = "10 min";
+	public static final String THIRTY_MIN_OPTION = "30 min";
+	public static final String ONE_HOUR_OPTION = "1 hour";
+	public static final String TWO_BY_ONE_OPTION = "2 min | 1 sec back";
+	public static final String THREE_BY_TWO_OPTION = "3 min | 2 sec back";
+	public static final String FIVE_BY_FIVE_OPTION = "5 min | 5 sec back";
+	public static final String CUSTOM_TIME_OPTION = "Custom";
 
 	// instance variables
-	private static GraphicsController graphicsController_;
-	private Board board_;
-	private AI ai_;
+	private static GraphicsController graphicsController;
+	private Board board;
+	private AI ai;
 	private boolean isSinglePlayer;
-	private Timer timer_;
-	private Space selectedSpace_;
-	private ArrayList<Move> possibleMoves_;
-	private Move enPassantMove_;
-	private boolean isWhiteTurn_;
-	private boolean isGamePlaying_;
-	private boolean isGameOver_;
+	private Timer timer;
+	private Space selectedSpace;
+	private ArrayList<Move> possibleMoves;
+	private Move enPassantMove;
+	private boolean isWhiteTurn;
+	private boolean isGamePlaying;
+	private boolean isGameOver;
 	private Thread thread;
 	private boolean isRunning;
 	private int threadDelay = 17;
-	private int startTime_;
-	private int timeBack_;
+	private int startTime;
+	private int timeBack;
 
 	// creates the frame and instantiates a new Game object
 	public static void main(String[] args) {
 		final Game game = new Game();
-		graphicsController_.renderPieces();
+		graphicsController.renderPieces();
 		game.start();
 
 		EventQueue.invokeLater(new Runnable() {
@@ -52,33 +69,37 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		});
 	}
 
-	// creates the board in its initial position
-	// creates a new GraphicsController
+	/**
+	 * Creates a new Game object with default values.
+	 */
 	public Game() {
-		isWhiteTurn_ = true;
-		isGamePlaying_ = false;
-		isGameOver_ = false;
-		startTime_ = 300000;
-		board_ = new Board();
-		board_.setPieces(createPieces(false), createPieces(true));
-		ai_ = new AI(board_, false, 0);
+		isWhiteTurn = true;
+		isGamePlaying = false;
+		isGameOver = false;
+		startTime = DEFAULT_GAME_TIME;
+		board = new Board();
+		board.setPieces(createPieces(false), createPieces(true));
+		ai = new AI(board, false, 0);
 		isSinglePlayer = true;
-		timer_ = new Timer(startTime_);
-		graphicsController_ = new GraphicsController(board_);
+		timer = new Timer(startTime);
+		graphicsController = new GraphicsController(board);
 	}
 
+	/**
+	 * Resets the game state variables and objects.
+	 */
 	public void newGame() {
 		// Reset all game variables
-		isWhiteTurn_ = true;
-		isGamePlaying_ = false;
-		isGameOver_ = false;
-		timer_.setTime(startTime_);
+		isWhiteTurn = true;
+		isGamePlaying = false;
+		isGameOver = false;
+		timer.setTime(startTime);
 
 		// Reset game objects
-		board_ = new Board();
-		board_.setPieces(createPieces(false), createPieces(true));
-		graphicsController_.setBoard(board_);
-		graphicsController_.renderPieces();
+		board = new Board();
+		board.setPieces(createPieces(false), createPieces(true));
+		graphicsController.setBoard(board);
+		graphicsController.renderPieces();
 	}
 
 	private ArrayList<Piece> createPieces(boolean isWhite) {
@@ -96,39 +117,39 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		// create the rooks
 		Piece piece = new Piece(Piece.TYPE_ROOK, isWhite, row, 0);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 0).setPiece(piece);
+		board.getSpace(row, 0).setPiece(piece);
 
 		piece = new Piece(Piece.TYPE_ROOK, isWhite, row, 7);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 7).setPiece(piece);
+		board.getSpace(row, 7).setPiece(piece);
 
 		// create the knights
 		piece = new Piece(Piece.TYPE_KNIGHT, isWhite, row, 1);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 1).setPiece(piece);
+		board.getSpace(row, 1).setPiece(piece);
 
 		piece = new Piece(Piece.TYPE_KNIGHT, isWhite, row, 6);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 6).setPiece(piece);
+		board.getSpace(row, 6).setPiece(piece);
 
 		// create the bishops
 		piece = new Piece(Piece.TYPE_BISHOP, isWhite, row, 2);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 2).setPiece(piece);
+		board.getSpace(row, 2).setPiece(piece);
 
 		piece = new Piece(Piece.TYPE_BISHOP, isWhite, row, 5);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 5).setPiece(piece);
+		board.getSpace(row, 5).setPiece(piece);
 
 		// create the queen
 		piece = new Piece(Piece.TYPE_QUEEN, isWhite, row, 3);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 3).setPiece(piece);
+		board.getSpace(row, 3).setPiece(piece);
 
 		// create the king
 		piece = new Piece(Piece.TYPE_KING, isWhite, row, 4);
 		piecesToCreate.add(piece);
-		board_.getSpace(row, 4).setPiece(piece);
+		board.getSpace(row, 4).setPiece(piece);
 
 		return piecesToCreate;
 	}
@@ -145,7 +166,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		for (int c = 0; c <= Board.MAX_COL; c++) {
 			Piece pawn = new Piece(Piece.TYPE_PAWN, isWhite, row, c);
 			pawns.add(pawn);
-			board_.getSpace(row, c).setPiece(pawn);
+			board.getSpace(row, c).setPiece(pawn);
 		}
 
 		return pawns;
@@ -164,29 +185,29 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			while (true) {
 				thread.sleep(threadDelay);
 
-				if (isGamePlaying_) {
-					timer_.decrementTime(threadDelay, isWhiteTurn_);
+				if (isGamePlaying) {
+					timer.decrementTime(threadDelay, isWhiteTurn);
 
-					if (timer_.getRemainingTime(isWhiteTurn_) <= 0) {
-						if (isWhiteTurn_)
+					if (timer.getRemainingTime(isWhiteTurn) <= 0) {
+						if (isWhiteTurn)
 							gameOver("Black wins by timeout!");
 						else
 							gameOver("White wins by timeout!");
 					}
 				}
 
-				graphicsController_.renderTimer(timer_.getRemainingTime(false), timer_.getRemainingTime(true));
+				graphicsController.renderTimer(timer.getRemainingTime(false), timer.getRemainingTime(true));
 			}
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 
-		if (!isGamePlaying_)
+		if (!isGamePlaying)
 			System.out.println("GAME OVER");
 	}
 
 	/**
-	 * Helper method that displays a game over message with an option to start a new game or quit.
+	 * Displays a game over message with an option to start a new game or quit.
 	 * <br>pre: message != null
 	 * @param message
 	 */
@@ -196,9 +217,9 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		if(message == null)
 			throw new IllegalArgumentException("message may not be null.");
 		
-		isGameOver_ = true;
-		isGamePlaying_ = false;
-		Object[] options = { "New Game", "Close" };
+		isGameOver = true;
+		isGamePlaying = false;
+		Object[] options = { NEW_GAME_OPTION, "Close" };
 		int selectedValue = JOptionPane.showOptionDialog(null, message, "Gave Over", JOptionPane.DEFAULT_OPTION,
 				JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
@@ -206,19 +227,22 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			newGame();
 	}
 
-	// switches the turn from black to white and vice versa
-	// pre: none
+	/** 
+	 * Switches the turn from black to white and vice versa.
+	 * <br>pre: none
+	 */
 	private void switchTurns() {
-		timer_.incrementTime(timeBack_, isWhiteTurn_);
-		isWhiteTurn_ = !isWhiteTurn_;
-		if (MoveValidator.isCheckMate(isWhiteTurn_, board_)) {
-			if (isWhiteTurn_)
+		timer.incrementTime(timeBack, isWhiteTurn);
+		isWhiteTurn = !isWhiteTurn;
+		if (MoveValidator.isCheckMate(isWhiteTurn, board)) {
+			if (isWhiteTurn) {
 				gameOver("Black wins by checkmate!");
-			else
+			} else {
 				gameOver("White wins by checkmate!");
-		} else if (isSinglePlayer && isWhiteTurn_ == ai_.isWhite()) {
+			}
+		} else if (isSinglePlayer && isWhiteTurn == ai.isWhite()) {
 			//System.out.println("AI choice for next move: ");
-			Move move = ai_.getNextMove();
+			Move move = ai.getNextMove();
 			//System.out.println(move);
 		}
 	}
@@ -248,13 +272,13 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	public void mouseClicked(MouseEvent event) {
 		System.out.println("Mouse clicked: (" + event.getX() + ", " + event.getY() + ")");
 
-		if (!isGameOver_) {
+		if (!isGameOver) {
 			int row = getRowOnBoard(event.getY());
 			int col = getColOnBoard(event.getX());
 			// System.out.println("Mouse clicked: (" + row + ", " + col + ")");
 
 			if (row != -1 && col != -1) {
-				Space clickedSpace = board_.getSpace(row, col);
+				Space clickedSpace = board.getSpace(row, col);
 				Piece piece = clickedSpace.getPiece();
 
 				/*
@@ -269,30 +293,31 @@ public class Game implements MouseListener, Runnable, ActionListener {
 
 				// CASE 1
 				Move selectedMove = null;
-				if (possibleMoves_ != null) {
-					for (int i = 0; i < possibleMoves_.size(); i++)
-						if (possibleMoves_.get(i).containsDestination(clickedSpace)) {
-							selectedMove = possibleMoves_.get(i);
+				if (possibleMoves != null) {
+					for (int i = 0; i < possibleMoves.size(); i++)
+						if (possibleMoves.get(i).containsDestination(clickedSpace)) {
+							selectedMove = possibleMoves.get(i);
 							break;
 						}
 				}
 
 				if (selectedMove != null) {
-					board_.makeOfficialMove(selectedMove);
+					board.makeOfficialMove(selectedMove);
 					deselectAllSpaces();
 					switchTurns();
-					possibleMoves_ = null;
+					possibleMoves = null;
 				}
 				// CASE 2
-				else if (piece != null && clickedSpace != selectedSpace_
-						&& ((piece.isWhite() && isWhiteTurn_) || (!piece.isWhite() && !isWhiteTurn_))) {
+				else if (piece != null && clickedSpace != selectedSpace
+						&& ((piece.isWhite() && isWhiteTurn) || (!piece.isWhite() && !isWhiteTurn))) {
 					// System.out.println("CASE 2");
-					if (!isGamePlaying_)
-						isGamePlaying_ = true;
+					if (!isGamePlaying) {
+						isGamePlaying = true;
+					}
 
 					deselectAllSpaces();
-					selectedSpace_ = clickedSpace;
-					selectedSpace_.setSelected(true);
+					selectedSpace = clickedSpace;
+					selectedSpace.setSelected(true);
 					highlightPossibleMoves(piece);
 				} else {
 					// CASE 3 and CASE 4 covered here
@@ -301,23 +326,25 @@ public class Game implements MouseListener, Runnable, ActionListener {
 				}
 			}
 
-			graphicsController_.renderPieces();
+			graphicsController.renderPieces();
 		}
 	}
 
-	// finds the possible moves for a piece
-	// and highlights them for the next rendering
-	// pre: piece cannot be null
+	/**
+	 * Finds the possible moves for a piece and highlights
+	 * them for the next rendering.
+	 * @param piece The piece to find moves for. Cannot be null.
+	 * <br>pre: piece != null
+	 */
 	private void highlightPossibleMoves(Piece piece) {
-		// check precondition
-		if (piece == null)
+		if (piece == null) {
 			throw new IllegalArgumentException("Piece cannot be null");
+		}
 
-		possibleMoves_ = MoveValidator.findLegalMoves(piece, board_, true);
-		// System.out.println("Available moves pre check: " + possibleMoves_);
+		possibleMoves = MoveValidator.findLegalMoves(piece, board, true);
 
-		for (int i = 0; i < possibleMoves_.size(); i++) {
-			Move move = possibleMoves_.get(i);
+		for (int i = 0; i < possibleMoves.size(); i++) {
+			Move move = possibleMoves.get(i);
 			if (move.isCapture())
 				move.getDestination().setTakingMove(true);
 			else
@@ -334,47 +361,56 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		 */
 	}
 
-	// unhighlights all of the highlighted spaces
-	// pre: none
+	/**
+	 * Removes highlighting from all spaces.
+	 * <br>pre: none
+	 */
 	private void deselectAllSpaces() {
-		if (selectedSpace_ != null) {
-			selectedSpace_.setSelected(false);
-			selectedSpace_ = null;
+		if (selectedSpace != null) {
+			selectedSpace.setSelected(false);
+			selectedSpace = null;
 		}
 
-		if (possibleMoves_ != null)
-			for (int i = 0; i < possibleMoves_.size(); i++) {
-				possibleMoves_.get(i).getDestination().setPossibleMove(false);
-				possibleMoves_.get(i).getDestination().setTakingMove(false);
-				possibleMoves_.remove(i);
+		if (possibleMoves != null) {
+			for (int i = 0; i < possibleMoves.size(); i++) {
+				possibleMoves.get(i).getDestination().setPossibleMove(false);
+				possibleMoves.get(i).getDestination().setTakingMove(false);
+				possibleMoves.remove(i);
 				i--;
 			}
+		}
 
-		if (enPassantMove_ != null) {
-			enPassantMove_.getDestination().setTakingMove(false);
-			enPassantMove_ = null;
+		if (enPassantMove != null) {
+			enPassantMove.getDestination().setTakingMove(false);
+			enPassantMove = null;
 		}
 	}
 
-	// returns the row on the board that was clicked
-	// pre: none
+	/**
+	 * Returns the row on the board that was clicked.
+	 * @param yPos The y-position in pixels of the click.
+	 * @return The corresponding row on the board, or -1 if 
+	 * the click did not occur on the board.
+	 */
 	private int getRowOnBoard(int yPos) {
 		int row = -1;
-
-		if (yPos - 68 < 512 && yPos - 68 > 0)
-			row = (yPos - 68) / 64;
-
+		if (yPos - 68 < BOARD_SIDE_LENGTH && yPos - 68 > 0) {
+			row = (yPos - 68) / SPACE_SIDE_LENGTH;
+		}
 		return row;
 	}
 
-	// returns the col on the board that was clicked
-	// pre: none
+	/**
+	 * Returns the column on the board that was clicked.
+	 * @param xPos The x-position in pixels of the click.
+	 * @return The corresponding row on the board, or -1 if
+	 * the click did not occur on the board.
+	 */
 	private int getColOnBoard(int xPos) {
 		int col = -1;
-
-		if (xPos < 512)
+		if (xPos >= 0 && xPos < 512) {
 			col = xPos / 64;
-
+		}
 		return col;
 	}
 
@@ -382,44 +418,48 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	 * Performs the various actions for the JMenuBarItems.
 	 */
 	public void actionPerformed(ActionEvent event) {
-		if (event.getActionCommand().equals("New Game"))
+		final int SECONDS_PER_MINUTE = 60;
+		final int MILLISECONDS_PER_SECOND = 1000;
+		
+		if (event.getActionCommand().equals(NEW_GAME_OPTION)) {
 			newGame();
-		else if (event.getActionCommand().equals("Single Player"))
+		} else if (event.getActionCommand().equals(SINGLE_PLAYER_OPTION)) {
 			isSinglePlayer = true;
-		else if (event.getActionCommand().equals("Two Player"))
+		} else if (event.getActionCommand().equals(TWO_PLAYER_OPTION)) {
 			isSinglePlayer = false;
-		else if (event.getActionCommand().equals("Quit"))
+		} else if (event.getActionCommand().equals(QUIT_OPTION)) {
 			System.exit(0);
-		else if (event.getActionCommand().equals("5 min") && !isGamePlaying_) {
-			startTime_ = 5 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 0;
-		} else if (event.getActionCommand().equals("10 min") && !isGamePlaying_) {
-			startTime_ = 10 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 0;
-		} else if (event.getActionCommand().equals("30 min") && !isGamePlaying_) {
-			startTime_ = 30 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 0;
-		} else if (event.getActionCommand().equals("1 hour") && !isGamePlaying_) {
-			startTime_ = 60 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 0;
-		} else if (event.getActionCommand().equals("2 min | 1 sec back") && !isGamePlaying_) {
-			startTime_ = 2 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 1 * 1000;
-		} else if (event.getActionCommand().equals("3 min | 2 sec back") && !isGamePlaying_) {
-			startTime_ = 3 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 2 * 1000;
-		} else if (event.getActionCommand().equals("5 min | 5 sec back") && !isGamePlaying_) {
-			startTime_ = 5 * 60 * 1000;
-			timer_.setTime(startTime_);
-			timeBack_ = 5 * 1000;
-		} else if (event.getActionCommand().equals("Custom") && !isGamePlaying_)
+		} else if (event.getActionCommand().equals(FIVE_MIN_OPTION) && !isGamePlaying) {
+			startTime = 5 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 0;
+		} else if (event.getActionCommand().equals(TEN_MIN_OPTION) && !isGamePlaying) {
+			startTime = 10 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 0;
+		} else if (event.getActionCommand().equals(THIRTY_MIN_OPTION) && !isGamePlaying) {
+			startTime = 30 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 0;
+		} else if (event.getActionCommand().equals(ONE_HOUR_OPTION) && !isGamePlaying) {
+			startTime = 60 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 0;
+		} else if (event.getActionCommand().equals(TWO_BY_ONE_OPTION) && !isGamePlaying) {
+			startTime = 2 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 1 * MILLISECONDS_PER_SECOND;
+		} else if (event.getActionCommand().equals(THREE_BY_TWO_OPTION) && !isGamePlaying) {
+			startTime = 3 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 2 * MILLISECONDS_PER_SECOND;
+		} else if (event.getActionCommand().equals(FIVE_BY_FIVE_OPTION) && !isGamePlaying) {
+			startTime = 5 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			timer.setTime(startTime);
+			timeBack = 5 * MILLISECONDS_PER_SECOND;
+		} else if (event.getActionCommand().equals(CUSTOM_TIME_OPTION) && !isGamePlaying) {
 			getCustomTime();
+		}
 	}
 
 	/**
@@ -434,9 +474,9 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		// if the user selects 'OK', set the new startTime and timeBack values
 		JOptionPaneMultiInput timerInputPane = new JOptionPaneMultiInput();
 		if (timerInputPane.display() == JOptionPane.OK_OPTION) {
-			startTime_ = timerInputPane.getStartTime();
-			timer_.setTime(startTime_);
-			timeBack_ = timerInputPane.getTimeBack();
+			startTime = timerInputPane.getStartTime();
+			timer.setTime(startTime);
+			timeBack = timerInputPane.getTimeBack();
 		}
 	}
 
@@ -467,7 +507,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		frame.setResizable(false);
 		frame.addMouseListener(game);
 		frame.setTitle(TITLE);
-		frame.add(graphicsController_);
+		frame.add(graphicsController);
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
@@ -482,16 +522,16 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		 * single and two player and quit.
 		 */
 		JMenu gameMenu = new JMenu("Game");
-		JMenuItem newGameItem = new JMenuItem("New Game");
+		JMenuItem newGameItem = new JMenuItem(NEW_GAME_OPTION);
 		newGameItem.addActionListener(game);
 
 		JMenu gameModeMenu = new JMenu("Mode");
-		JMenuItem singlePlayerItem = new JMenuItem("Single Player");
+		JMenuItem singlePlayerItem = new JMenuItem(SINGLE_PLAYER_OPTION);
 		singlePlayerItem.addActionListener(game);
-		JMenuItem twoPlayerItem = new JMenuItem("Two Player");
+		JMenuItem twoPlayerItem = new JMenuItem(TWO_PLAYER_OPTION);
 		twoPlayerItem.addActionListener(game);
 
-		JMenuItem quitItem = new JMenuItem("Quit");
+		JMenuItem quitItem = new JMenuItem(QUIT_OPTION);
 		quitItem.addActionListener(game);
 
 		gameModeMenu.add(singlePlayerItem);
@@ -508,21 +548,21 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		 */
 		JMenu timerMenu = new JMenu("Timer");
 		JMenu presetMenu = new JMenu("Presets");
-		JMenuItem min5Item = new JMenuItem("5 min");
+		JMenuItem min5Item = new JMenuItem(FIVE_MIN_OPTION);
 		min5Item.addActionListener(game);
-		JMenuItem min10Item = new JMenuItem("10 min");
+		JMenuItem min10Item = new JMenuItem(TEN_MIN_OPTION);
 		min10Item.addActionListener(game);
-		JMenuItem min30Item = new JMenuItem("30 min");
+		JMenuItem min30Item = new JMenuItem(THIRTY_MIN_OPTION);
 		min30Item.addActionListener(game);
-		JMenuItem hourItem = new JMenuItem("1 hour");
+		JMenuItem hourItem = new JMenuItem(ONE_HOUR_OPTION);
 		hourItem.addActionListener(game);
-		JMenuItem min2sec1Item = new JMenuItem("2 min | 1 sec back");
+		JMenuItem min2sec1Item = new JMenuItem(TWO_BY_ONE_OPTION);
 		min2sec1Item.addActionListener(game);
-		JMenuItem min3sec2Item = new JMenuItem("3 min | 2 sec back");
+		JMenuItem min3sec2Item = new JMenuItem(THREE_BY_TWO_OPTION);
 		min3sec2Item.addActionListener(game);
-		JMenuItem min5sec5Item = new JMenuItem("5 min | 5 sec back");
+		JMenuItem min5sec5Item = new JMenuItem(FIVE_BY_FIVE_OPTION);
 		min5sec5Item.addActionListener(game);
-		JMenuItem customItem = new JMenuItem("Custom");
+		JMenuItem customItem = new JMenuItem(CUSTOM_TIME_OPTION);
 		customItem.addActionListener(game);
 		presetMenu.add(min5Item);
 		presetMenu.add(min10Item);
