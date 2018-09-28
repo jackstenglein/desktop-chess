@@ -1,7 +1,9 @@
 import java.awt.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -30,8 +32,8 @@ public class GraphicsController extends JPanel {
 	private Image whiteRookLostImage_;
 	private Image whiteQueenLostImage_;
 
-	private BufferedImage[] whiteImages_;
-	private BufferedImage[] blackImages_;
+	private HashMap<Piece.PieceType, BufferedImage> whiteImages_;
+	private HashMap<Piece.PieceType, BufferedImage> blackImages_;
 
 	private Board board_;
 	private String blackTimer_;
@@ -39,23 +41,23 @@ public class GraphicsController extends JPanel {
 
 	public GraphicsController(Board board) {
 		board_ = board;
-		whiteImages_ = new BufferedImage[6];
-		blackImages_ = new BufferedImage[6];
+		whiteImages_ = new HashMap<Piece.PieceType, BufferedImage>(6);
+		blackImages_ = new HashMap<Piece.PieceType, BufferedImage>(6);
 
 		try {
-			whiteImages_[0] = ImageIO.read(this.getClass().getResource("images/pawn_white.png"));
-			whiteImages_[1] = ImageIO.read(this.getClass().getResource("images/knight_white.png"));
-			whiteImages_[2] = ImageIO.read(this.getClass().getResource("images/bishop_white.png"));
-			whiteImages_[3] = ImageIO.read(this.getClass().getResource("images/rook_white.png"));
-			whiteImages_[4] = ImageIO.read(this.getClass().getResource("images/queen_white.png"));
-			whiteImages_[5] = ImageIO.read(this.getClass().getResource("images/king_white.png"));
+			whiteImages_.put(Piece.PieceType.PAWN, ImageIO.read(this.getClass().getResource("images/pawn_white.png")));
+			whiteImages_.put(Piece.PieceType.KNIGHT, ImageIO.read(this.getClass().getResource("images/knight_white.png")));
+			whiteImages_.put(Piece.PieceType.BISHOP, ImageIO.read(this.getClass().getResource("images/bishop_white.png")));
+			whiteImages_.put(Piece.PieceType.ROOK, ImageIO.read(this.getClass().getResource("images/rook_white.png")));
+			whiteImages_.put(Piece.PieceType.QUEEN, ImageIO.read(this.getClass().getResource("images/queen_white.png")));
+			whiteImages_.put(Piece.PieceType.KING, ImageIO.read(this.getClass().getResource("images/king_white.png")));
 
-			blackImages_[0] = ImageIO.read(this.getClass().getResource("images/pawn_black.png"));
-			blackImages_[1] = ImageIO.read(this.getClass().getResource("images/knight_black.png"));
-			blackImages_[2] = ImageIO.read(this.getClass().getResource("images/bishop_black.png"));
-			blackImages_[3] = ImageIO.read(this.getClass().getResource("images/rook_black.png"));
-			blackImages_[4] = ImageIO.read(this.getClass().getResource("images/queen_black.png"));
-			blackImages_[5] = ImageIO.read(this.getClass().getResource("images/king_black.png"));
+			blackImages_.put(Piece.PieceType.PAWN, ImageIO.read(this.getClass().getResource("images/pawn_black.png")));
+			blackImages_.put(Piece.PieceType.KNIGHT, ImageIO.read(this.getClass().getResource("images/knight_black.png")));
+			blackImages_.put(Piece.PieceType.BISHOP, ImageIO.read(this.getClass().getResource("images/bishop_black.png")));
+			blackImages_.put(Piece.PieceType.ROOK, ImageIO.read(this.getClass().getResource("images/rook_black.png")));
+			blackImages_.put(Piece.PieceType.QUEEN, ImageIO.read(this.getClass().getResource("images/queen_black.png")));
+			blackImages_.put(Piece.PieceType.KING, ImageIO.read(this.getClass().getResource("images/king_black.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -216,9 +218,9 @@ public class GraphicsController extends JPanel {
 			if (!piece.isCaptured()) {
 				BufferedImage image;
 				if (piece.isWhite())
-					image = whiteImages_[piece.getType() - 1];
+					image = whiteImages_.get(piece.getType());
 				else
-					image = blackImages_[piece.getType() - 1];
+					image = blackImages_.get(piece.getType());
 
 				int row = piece.getRow();
 				int col = piece.getCol();

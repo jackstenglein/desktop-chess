@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -115,39 +116,39 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			row = 0;
 
 		// create the rooks
-		Piece piece = new Piece(Piece.TYPE_ROOK, isWhite, row, 0);
+		Piece piece = new Piece(Piece.PieceType.ROOK, isWhite, row, 0);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 0).setPiece(piece);
 
-		piece = new Piece(Piece.TYPE_ROOK, isWhite, row, 7);
+		piece = new Piece(Piece.PieceType.ROOK, isWhite, row, 7);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 7).setPiece(piece);
 
 		// create the knights
-		piece = new Piece(Piece.TYPE_KNIGHT, isWhite, row, 1);
+		piece = new Piece(Piece.PieceType.KNIGHT, isWhite, row, 1);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 1).setPiece(piece);
 
-		piece = new Piece(Piece.TYPE_KNIGHT, isWhite, row, 6);
+		piece = new Piece(Piece.PieceType.KNIGHT, isWhite, row, 6);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 6).setPiece(piece);
 
 		// create the bishops
-		piece = new Piece(Piece.TYPE_BISHOP, isWhite, row, 2);
+		piece = new Piece(Piece.PieceType.BISHOP, isWhite, row, 2);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 2).setPiece(piece);
 
-		piece = new Piece(Piece.TYPE_BISHOP, isWhite, row, 5);
+		piece = new Piece(Piece.PieceType.BISHOP, isWhite, row, 5);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 5).setPiece(piece);
 
 		// create the queen
-		piece = new Piece(Piece.TYPE_QUEEN, isWhite, row, 3);
+		piece = new Piece(Piece.PieceType.QUEEN, isWhite, row, 3);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 3).setPiece(piece);
 
 		// create the king
-		piece = new Piece(Piece.TYPE_KING, isWhite, row, 4);
+		piece = new Piece(Piece.PieceType.KING, isWhite, row, 4);
 		piecesToCreate.add(piece);
 		board.getSpace(row, 4).setPiece(piece);
 
@@ -164,7 +165,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			row = 1;
 
 		for (int c = 0; c <= Board.MAX_COL; c++) {
-			Piece pawn = new Piece(Piece.TYPE_PAWN, isWhite, row, c);
+			Piece pawn = new Piece(Piece.PieceType.PAWN, isWhite, row, c);
 			pawns.add(pawn);
 			board.getSpace(row, c).setPiece(pawn);
 		}

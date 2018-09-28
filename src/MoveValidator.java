@@ -210,32 +210,34 @@ public class MoveValidator {
 
 		ArrayList<Move> availableMoves = new ArrayList<Move>();
 
-		int pieceType = piece.getType();
+		Piece.PieceType pieceType = piece.getType();
 		int pieceRow = piece.getRow();
 		int pieceCol = piece.getCol();
 		boolean pieceIsWhite = piece.isWhite();
-
-		if (pieceType == Piece.TYPE_PAWN) {
-			// System.out.println("Find pawn moves");
-			availableMoves = findAvailablePawnMoves(pieceRow, pieceCol, pieceIsWhite, board);
-			Move enPassant = findAvailableEnPassantMove(piece, board);
-			if (enPassant != null)
-				availableMoves.add(enPassant);
-		} else if (pieceType == Piece.TYPE_KNIGHT) {
-			// System.out.println("Find knight moves");
-			availableMoves = findAvailableKnightMoves(piece, board);
-		} else if (pieceType == Piece.TYPE_BISHOP) {
-			// System.out.println("Find bishop moves");
-			availableMoves = findAvailableBishopMoves(piece, board);
-		} else if (pieceType == Piece.TYPE_ROOK) {
-			// System.out.println("Find rook moves");
-			availableMoves = findAvailableRookMoves(piece, board);
-		} else if (pieceType == Piece.TYPE_QUEEN) {
-			// System.out.println("Find queen moves");
-			availableMoves = findAvailableQueenMoves(piece, board);
-		} else if (pieceType == Piece.TYPE_KING) {
-			// System.out.println("Find king moves");
-			availableMoves = findAvailableKingMoves(piece, board, checkCastling);
+		
+		switch(pieceType) {
+			case PAWN:
+				availableMoves = findAvailablePawnMoves(pieceRow, pieceCol, pieceIsWhite, board);
+				Move enPassant = findAvailableEnPassantMove(piece, board);
+				if (enPassant != null) {
+					availableMoves.add(enPassant);
+				}
+				break;
+			case KNIGHT:
+				availableMoves = findAvailableKnightMoves(piece, board);
+				break;
+			case BISHOP:
+				availableMoves = findAvailableBishopMoves(piece, board);
+				break;
+			case ROOK:
+				availableMoves = findAvailableRookMoves(piece, board);
+				break;
+			case QUEEN:
+				availableMoves = findAvailableQueenMoves(piece, board);
+				break;
+			case KING:
+				availableMoves = findAvailableKingMoves(piece, board, checkCastling);
+				break;
 		}
 
 		return availableMoves;
@@ -378,7 +380,7 @@ public class MoveValidator {
 			//System.out.println("Check en passant right");
 			Piece pieceRight = spaceRight.getPiece();
 			//System.out.println("Piece right: " + pieceRight);
-			if (pieceRow == magicRow && pieceRight != null && pieceRight.getType() == Piece.TYPE_PAWN
+			if (pieceRow == magicRow && pieceRight != null && pieceRight.getType() == Piece.PieceType.PAWN
 					&& pieceRight.getTimesMoved() == 1 && pieceRight.hasJustMoved()) {
 				//System.out.println("found en passant.");
 				return new Move(pawn, pieceRight, source, board.getSpace(pieceRow + rowChange, pieceCol + 1));
@@ -389,7 +391,7 @@ public class MoveValidator {
 		Space spaceLeft = board.getSpace(pieceRow, pieceCol - 1);
 		if (spaceLeft != null) {
 			Piece pieceLeft = spaceLeft.getPiece();
-			if (pieceRow == magicRow && pieceLeft != null && pieceLeft.getType() == Piece.TYPE_PAWN
+			if (pieceRow == magicRow && pieceLeft != null && pieceLeft.getType() == Piece.PieceType.PAWN
 					&& pieceLeft.getTimesMoved() == 1 && pieceLeft.hasJustMoved()) {
 				//System.out.println("found en passant.");
 				return new Move(pawn, pieceLeft, source, board.getSpace(pieceRow + rowChange, pieceCol - 1));
@@ -763,7 +765,7 @@ public class MoveValidator {
 				}
 			}
 
-			if (pieces.get(i).getType() == Piece.TYPE_PAWN) {
+			if (pieces.get(i).getType() == Piece.PieceType.PAWN) {
 				Move enPassantMove = findAvailableEnPassantMove(pieces.get(i), board);
 
 				if (enPassantMove != null && !isCheckAfterMove(enPassantMove, board))

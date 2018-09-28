@@ -6,357 +6,274 @@
 public class Piece implements Comparable<Piece> {
 
 	// class constants
-	public static final int TYPE_PAWN = 1;
-	public static final int TYPE_KNIGHT = 2;
-	public static final int TYPE_BISHOP = 3;
-	public static final int TYPE_ROOK = 4;
-	public static final int TYPE_QUEEN = 5;
-	public static final int TYPE_KING = 6;
+	public enum PieceType {
+		PAWN("pawn", 1),
+		KNIGHT("knight", 3),
+		BISHOP("bishop", 3),
+		ROOK("rook", 5),
+		QUEEN("queen", 9),
+		KING("king", 6);
+		
+		private final String name;
+		private final int value;
+		private PieceType(String name, int value) {
+			this.name = name;
+			this.value = value;
+		}
+	}
 
 	// instance variables
-	private int type_;
-	private boolean isWhite_;
-	private int row_;
-	private int col_;
-	private boolean isCaptured_;
-	private boolean hasJustMoved_;
-	private boolean promoted_;
-	private int timesMoved_;
+	private PieceType type;
+	private boolean isWhite;
+	private int row;
+	private int col;
+	private boolean isCaptured;
+	private boolean hasJustMoved;
+	private boolean promoted;
+	private int timesMoved;
 
 	/**
-	 * Create a Piece with the specified values. <br>
-	 * pre: Piece.TYPE_PAWN <= type <= Piece.TYPE_KING && Board.MIN_ROW <= row
-	 * <= Board.MAX_ROW && Board.MIN_COL <= col <= Board.MAX_COL
+	 * Creates a Piece object with the specified values. <br>
+	 * pre: Board.MIN_ROW <= row <= Board.MAX_ROW &&
+	 *      Board.MIN_COL <= col <= Board.MAX_COL
 	 * 
-	 * @param type
-	 *            The type of Piece. Piece.TYPE_PAWN <= type <= Piece.TYPE_KING
-	 * @param isWhite
-	 *            A boolean indicating whether the Piece is white or black
-	 * @param row
-	 *            The row of the Board that the Piece is on. Board.MIN_ROW <=
+	 * @param type The type of Piece.
+	 * @param isWhite A boolean indicating whether the Piece is white or black
+	 * @param row The row of the Board that the Piece is on. Board.MIN_ROW <=
 	 *            row <= Board.MAX_ROW
-	 * @param col
-	 *            The col of the Board that the Piece is on. Board.MIN_COL <=
+	 * @param col The col of the Board that the Piece is on. Board.MIN_COL <=
 	 *            col <= Board.MAX_COL
 	 */
-	public Piece(int type, boolean isWhite, int row, int col) {
+	public Piece(PieceType type, boolean isWhite, int row, int col) {
 		// check precondition
-		if (type < TYPE_PAWN || type > TYPE_KING)
-			throw new IllegalArgumentException("Specified piece type is not valid: " + type);
-		else if (row < Board.MIN_ROW || row > Board.MAX_ROW || col < Board.MIN_COL || col > Board.MAX_COL)
+		if (row < Board.MIN_ROW || row > Board.MAX_ROW || col < Board.MIN_COL || col > Board.MAX_COL)
 			throw new IllegalArgumentException("Specifed row/col is not valid. Row: " + row + ", col: " + col);
 
 		// set values
-		type_ = type;
-		isWhite_ = isWhite;
-		row_ = row;
-		col_ = col;
-		isCaptured_ = false;
-		hasJustMoved_ = false;
-		promoted_ = false;
-		timesMoved_ = 0;
+		this.type = type;
+		this.isWhite = isWhite;
+		this.row = row;
+		this.col = col;
+		isCaptured = false;
+		hasJustMoved = false;
+		promoted = false;
+		timesMoved = 0;
 	}
 
 	/**
-	 * Set the type of this Piece. <br>
-	 * pre: Piece.TYPE_PAWN <= type <= Piece.TYPE_KING
+	 * Promotes a pawn to a new piece type. <br>
+	 * pre: This piece is a pawn.
 	 * 
-	 * @param type
-	 *            The type of the Piece. Piece.TYPE_PAWN <= type <=
-	 *            Piece.TYPE_KING
+	 * @param type The type of the Piece.
 	 */
-	public void setType(int type) {
+	public void promote(PieceType newType) {
 		// check precondition
-		if (type < TYPE_PAWN || type > TYPE_KING)
-			throw new IllegalArgumentException("Specified piece type is not valid: " + type);
+		if (type != PieceType.PAWN)
+			throw new IllegalStateException("The piece must be a pawn, but is instead a " + type.name);
 
-		type_ = type;
+		type = newType;
 	}
 
 	/**
-	 * Return the type of this Piece as an int. <br>
-	 * pre: none
+	 * Returns the type of this Piece.
 	 * 
-	 * @return an int representing the type of this Piece.
+	 * @return The type of this Piece.
 	 */
-	public int getType() {
-		return type_;
+	public PieceType getType() {
+		return type;
 	}
 
 	/**
-	 * Return a boolean indicating whether the Piece is white. <br>
-	 * pre: none
+	 * Returns a boolean indicating whether the Piece is white.
 	 * 
 	 * @return True if the Piece is white, false if the Piece is black
 	 */
 	public boolean isWhite() {
-		return isWhite_;
+		return isWhite;
 	}
 
 	/**
-	 * Set the row of this Piece. <br>
-	 * pre: Board.MIN_ROW <= row <= Board.MAX_ROW
+	 * Sets the row of this Piece.
 	 * 
-	 * @param row
-	 *            The row to move the Piece to. Board.MIN_ROW <= row <=
-	 *            Board.MAX_ROW
+	 * @param row The row to move the Piece to. 
+	 *            Board.MIN_ROW <= row <= Board.MAX_ROW
 	 */
 	public void setRow(int row) {
-		// check precondition
 		if (row < Board.MIN_ROW || row > Board.MAX_ROW)
 			throw new IllegalArgumentException("Specifed row is not valid: " + row);
-
-		row_ = row;
+		
+		this.row = row;
 	}
 
 	/**
-	 * Return the row of the Board this Piece is on. <br>
-	 * pre: none
+	 * Returns the row of the Board this Piece is on.
 	 * 
 	 * @return The row this Piece is on.
 	 */
 	public int getRow() {
-		return row_;
+		return row;
 	}
 
 	/**
-	 * Set the col of this Piece. <br>
-	 * pre: Board.MIN_COL <= col <= Board.MAX_COL
+	 * Sets the column of this Piece.
 	 * 
-	 * @param col
-	 *            The col to move the Piece to. Board.MIN_COL <= col <=
-	 *            Board.MAX_COL
+	 * @param col The column to move the Piece to. 
+	 *            Board.MIN_COL <= col <= Board.MAX_COL
 	 */
 	public void setCol(int col) {
-		// check precondition
 		if (col < Board.MIN_COL || col > Board.MAX_COL)
 			throw new IllegalArgumentException("Specified col is not valid: " + col);
 
-		col_ = col;
+		this.col = col;
 	}
 
 	/**
-	 * Return the col of the Board this Piece is on. <br>
-	 * pre: none
+	 * Returns the column of the Board this Piece is on. 
 	 * 
-	 * @return The col this Piece is on.
+	 * @return The column this Piece is on.
 	 */
 	public int getCol() {
-		return col_;
+		return col;
 	}
 
 	/**
-	 * Set whether this Piece is captured or not. <br>
-	 * pre: none
+	 * Sets whether this Piece is captured or not. 
 	 * 
-	 * @param isCaptured
-	 *            A boolean indicating whether the Piece is captured.
+	 * @param isCaptured A boolean indicating whether the Piece is captured.
 	 */
 	public void setCaptured(boolean isCaptured) {
-		isCaptured_ = isCaptured;
+		this.isCaptured = isCaptured;
 	}
 
 	/**
-	 * Return a boolean indicating whether the Piece is captured or not. <br>
-	 * pre: none
+	 * Returns a boolean indicating whether the Piece is captured or not.
 	 * 
 	 * @return True if the Piece is captured, false if not.
 	 */
 	public boolean isCaptured() {
-		return isCaptured_;
+		return isCaptured;
 	}
 	
 	/**
-	 * Set whether this Piece was promoted or not <br>
-	 * pre: none
+	 * Sets whether this Piece was promoted or not.
+	 * 
 	 * @param promoted A boolean indicating whether the Piece has been promoted or not.
 	 */
 	public void setPromoted(boolean promoted) {
-		promoted_ = promoted;
+		this.promoted = promoted;
 	}
 	
 	/**
-	 * Returns a boolean indicating whether this Piece was promoted or not <br>
-	 * pre: none
-	 * @return True if this Piece was a pawn that was promoted, false if not.
+	 * Returns a boolean indicating whether this Piece was promoted or not.
+	 * 
+	 * @return True If this Piece was a pawn that was promoted, false if not.
 	 */
 	public boolean wasPromoted() {
-		return promoted_;
+		return promoted;
 	}
 
 	/**
-	 * Adds one to the number of times this Piece has moved. <br>
-	 * pre: none
+	 * Increments the number of times this Piece has moved. 
 	 */
 	public void incrementTimesMoved() {
-		timesMoved_++;
+		timesMoved++;
 	}
 	
 	/**
-	 * Subtracts one from the number of times this Piece has moved. <br>
-	 * pre: timesMoved >= 1
+	 * Decrements the number of times this Piece has moved.
+	 * <br>pre: timesMoved > 0
 	 */
 	public void decrementTimesMoved() {
-		if(timesMoved_ < 1)
+		if(timesMoved < 1)
 			throw new IllegalStateException("timesMoved cannot be less than 0");
 		
-		timesMoved_--;
+		timesMoved--;
 	}
 
 	/**
-	 * Returns the number of times this Piece has moved. <br>
-	 * pre: none
+	 * Returns the number of times this Piece has moved.
 	 * 
 	 * @return The number of moves this Piece has made.
 	 */
 	public int getTimesMoved() {
-		return timesMoved_;
+		return timesMoved;
 	}
 
 	/**
-	 * Set whether this Piece has just moved or not. A Piece has just moved if
-	 * it moved and no other Pieces have moved since then. <br>
-	 * pre: none
+	 * Sets whether this Piece has just moved or not. A Piece has just moved if
+	 * it moved and no other Pieces have moved since then. 
 	 * 
-	 * @param hasJustMoved
-	 *            A boolean indicating whether the Piece just moved.
+	 * @param hasJustMoved A boolean indicating whether the Piece just moved.
 	 */
 	public void setHasJustMoved(boolean hasJustMoved) {
-		hasJustMoved_ = hasJustMoved;
+		this.hasJustMoved = hasJustMoved;
 	}
 
 	/**
-	 * Return a boolean indicating whether this Piece has just moved or not. A
+	 * Returns a boolean indicating whether this Piece has just moved or not. A
 	 * Piece has just moved if it moved and no other Pieces have moved since
-	 * then. <br>
-	 * pre: none
+	 * then. 
 	 * 
 	 * @return True if this Piece has just moved, false otherwise
 	 */
 	public boolean hasJustMoved() {
-		return hasJustMoved_;
+		return hasJustMoved;
 	}
 
 	/**
 	 * Returns the material value of this Piece according to chess convention.
-	 * <br>
-	 * pre: none
 	 * 
 	 * @return The material value of this piece.
 	 */
 	public int getValue() {
-		int value = 0;
-
-		switch (type_) {
-		case TYPE_PAWN:
-			value = 1;
-			break;
-		case TYPE_KNIGHT:
-			value = 3;
-			break;
-		case TYPE_BISHOP:
-			value = 3;
-			break;
-		case TYPE_ROOK:
-			value = 5;
-			break;
-		case TYPE_QUEEN:
-			value = 9;
-			break;
-		case TYPE_KING:
-			value = 6;
-			break;
-		}
-
-		return value;
+		return type.value;
 	}
 
 	/**
-	 * Returns the Piece's type as a String rather than a number.<br>
-	 * pre: none
+	 * Returns the Piece's type as a String.
 	 * 
 	 * @return The type of the Piece as a String.
 	 */
 	public String typeAsString() {
-		switch (type_) {
-		case TYPE_PAWN:
-			return "pawn";
-		case TYPE_KNIGHT:
-			return "knight";
-		case TYPE_BISHOP:
-			return "bishop";
-		case TYPE_ROOK:
-			return "rook";
-		case TYPE_QUEEN:
-			return "queen";
-		case TYPE_KING:
-			return "king";
-		default:
-			return "";
-		}
+		return type.name;
 	}
 
 	public String toString() {
-		String baseString = "";
-
-		switch (type_) {
-		case TYPE_PAWN:
-			baseString = "Pawn ";
-			break;
-		case TYPE_KNIGHT:
-			baseString = "Knight ";
-			break;
-		case TYPE_BISHOP:
-			baseString = "Bishop ";
-			break;
-		case TYPE_ROOK:
-			baseString = "Rook ";
-			break;
-		case TYPE_QUEEN:
-			baseString = "Queen ";
-			break;
-		case TYPE_KING:
-			baseString = "King ";
-			break;
-		}
-
-		baseString = baseString + "at (" + row_ + ", " + col_ + ") has moved " + timesMoved_ + " times, ";
-		baseString += isCaptured_ ? "is captured, " : "is active, ";
-		baseString += hasJustMoved_ ? "and has just moved." : "and has not just moved";
-
-		return baseString;
+		String result = type.name + " ";
+		result += "at (" + row + ", " + col + ") has moved " + timesMoved + " times, ";
+		result += isCaptured ? "is captured, " : "is active, ";
+		result += hasJustMoved ? "and has just moved." : "and has not just moved";
+		return result;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (isWhite_ ? 1231 : 1237);
-		result = prime * result + type_;
+		result = prime * result + (isWhite ? 1231 : 1237);
+		result = prime * result + type.name.hashCode();
 		return result;
 	}
 
 	/**
 	 * Returns a boolean indicating whether this Piece is equal to the passed
 	 * Object. The two Objects are equal if other is a Piece object of the same
-	 * color and type and at the same row and col as this Piece. <br>
-	 * pre: none
+	 * color and type and at the same row and col as this Piece. 
 	 * 
-	 * @return True if this Piece is equal to other, false otherwise
+	 * @param other The object to compare to this piece.
+	 * 
+	 * @return True if this Piece is equal to other, false otherwise.
 	 */
 	public boolean equals(Object other) {
-
 		if (other instanceof Piece) {
-			// safe to cast
 			Piece otherPiece = (Piece) other;
-			if (type_ != otherPiece.type_)
+			if (type != otherPiece.type) {
 				return false;
-			else if (otherPiece.row_ != row_ || otherPiece.col_ != col_)
+			} else if (otherPiece.row != row || otherPiece.col != col) {
 				return false;
-			else if (otherPiece.isWhite_ != isWhite_)
-				return false;
-
-			return true;
+			}
+			
+			return otherPiece.isWhite == isWhite;
 		}
 
 		return false;

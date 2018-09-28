@@ -68,12 +68,12 @@ public class Board {
 
 		// set the kings to the correct Pieces
 		for (int i = 0; i < blackPieces_.size(); i++) {
-			if (blackPieces_.get(i).getType() == Piece.TYPE_KING)
+			if (blackPieces_.get(i).getType() == Piece.PieceType.KING)
 				blackKing_ = blackPieces_.get(i);
 		}
 
 		for (int i = 0; i < whitePieces_.size(); i++) {
-			if (whitePieces_.get(i).getType() == Piece.TYPE_KING)
+			if (whitePieces_.get(i).getType() == Piece.PieceType.KING)
 				whiteKing_ = whitePieces_.get(i);
 		}
 	}
@@ -164,7 +164,7 @@ public class Board {
 		source.setPiece(null);
 
 		// check if this is a castle, call helper method if so
-		if (movedPiece.getType() == Piece.TYPE_KING
+		if (movedPiece.getType() == Piece.PieceType.KING
 				&& (source.getCol() - dest.getCol() == 2 || source.getCol() - dest.getCol() == -2))
 			castle(source, dest);
 
@@ -287,7 +287,7 @@ public class Board {
 		if (movedPiece == null)
 			throw new IllegalArgumentException("movedPiece may not be null.");
 
-		if (movedPiece.getType() == Piece.TYPE_PAWN
+		if (movedPiece.getType() == Piece.PieceType.PAWN
 				&& (movedPiece.getRow() == Board.MIN_ROW || movedPiece.getRow() == Board.MAX_ROW)) {
 
 			// display the JOptionPane
@@ -297,12 +297,12 @@ public class Board {
 
 			// the user actually made a choice
 			if (selectedValue > -1)
-				movedPiece.setType(selectedValue + 2);
+				movedPiece.promote(Piece.PieceType.valueOf(((String)buttons[selectedValue]).toUpperCase()));
 
 			// otherwise, they cancelled, so
 			// just make the default value a queen
 			else
-				movedPiece.setType(Piece.TYPE_QUEEN);
+				movedPiece.promote(Piece.PieceType.QUEEN);
 
 			movedPiece.setPromoted(true);
 		}
@@ -335,50 +335,50 @@ public class Board {
 
 	/**
 	 * Helper method for pieceLost() that increments the count of lost Pieces.
-	 * <br>
-	 * pre: none
 	 * 
-	 * @param isWhite
-	 *            a boolean indicating whether the lost Piece was white
-	 * @param type
-	 *            an int that represents the type of the Piece
+	 * @param isWhite A boolean indicating whether the lost Piece was white.
+	 * @param type The type of the Piece.
 	 */
-	private void incrementLostCount(boolean isWhite, int type, int increment) {
+	private void incrementLostCount(boolean isWhite, Piece.PieceType type, int increment) {
 		if (isWhite) {
 			switch (type) {
-			case Piece.TYPE_PAWN:
-				whitePawnsLost_ += increment;
-				break;
-			case Piece.TYPE_KNIGHT:
-				whiteKnightsLost_ += increment;
-				break;
-			case Piece.TYPE_BISHOP:
-				whiteBishopsLost_ += increment;
-				break;
-			case Piece.TYPE_ROOK:
-				whiteRooksLost_ += increment;
-				break;
-			case Piece.TYPE_QUEEN:
-				whiteQueensLost_ += increment;
-				break;
+				case PAWN:
+					whitePawnsLost_ += increment;
+					break;
+				case KNIGHT:
+					whiteKnightsLost_ += increment;
+					break;
+				case BISHOP:
+					whiteBishopsLost_ += increment;
+					break;
+				case ROOK:
+					whiteRooksLost_ += increment;
+					break;
+				case QUEEN:
+					whiteQueensLost_ += increment;
+					break;
+				default:
+					break;
 			}
 		} else {
 			switch (type) {
-			case Piece.TYPE_PAWN:
-				blackPawnsLost_ += increment;
-				break;
-			case Piece.TYPE_KNIGHT:
-				blackKnightsLost_ += increment;
-				break;
-			case Piece.TYPE_BISHOP:
-				blackBishopsLost_ += increment;
-				break;
-			case Piece.TYPE_ROOK:
-				blackRooksLost_ += increment;
-				break;
-			case Piece.TYPE_QUEEN:
-				blackQueensLost_ += increment;
-				break;
+				case PAWN:
+					blackPawnsLost_ += increment;
+					break;
+				case KNIGHT:
+					blackKnightsLost_ += increment;
+					break;
+				case BISHOP:
+					blackBishopsLost_ += increment;
+					break;
+				case ROOK:
+					blackRooksLost_ += increment;
+					break;
+				case QUEEN:
+					blackQueensLost_ += increment;
+					break;
+				default:
+					break;
 			}
 		}
 	}
@@ -403,7 +403,7 @@ public class Board {
 		dest.setPiece(null);
 		
 		// check if this is a castle, call helper method if so
-		if (movedPiece.getType() == Piece.TYPE_KING
+		if (movedPiece.getType() == Piece.PieceType.KING
 				&& (source.getCol() - dest.getCol() == 2 || source.getCol() - dest.getCol() == -2))
 					uncastle(source, dest);
 
