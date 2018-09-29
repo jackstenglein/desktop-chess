@@ -138,7 +138,7 @@ public class GraphicsController extends JPanel {
 	/**
 	 * Creates a new GraphicsController object that paints the specified board.
 	 * 
-	 * @param board The board to paint. Must not be null.
+	 * @param board The board to paint. Can be null.
 	 */
 	public GraphicsController(Board board) {
 		setBoard(board);
@@ -147,12 +147,9 @@ public class GraphicsController extends JPanel {
 	/**
 	 * Sets which board object the GraphicController will paint.
 	 * 
-	 * @param board The board to paint. Must not be null.
+	 * @param board The board to paint. Can be null.
 	 */
 	public void setBoard(Board board) {
-		if (board == null) {
-			throw new IllegalArgumentException("The board to paint must not be null.");
-		}
 		this.board = board;
 	}
 

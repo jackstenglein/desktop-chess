@@ -75,16 +75,11 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	 * Creates a new Game object with default values.
 	 */
 	public Game() {
-		isWhiteTurn = true;
-		isGamePlaying = false;
-		isGameOver = false;
 		startTime = DEFAULT_GAME_TIME;
-		board = new Board();
-		ai = new AI(board, false, 0);
 		isSinglePlayer = true;
+		graphicsController = new GraphicsController(null);
 		timer = new Timer(startTime);
-		graphicsController = new GraphicsController(board);
-		graphicsController.renderPieces();
+		newGame();
 	}
 
 	/**
@@ -96,22 +91,24 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		isGameOver = false;
 		timer.setTime(startTime);
 		board = new Board();
+		if (isSinglePlayer) {
+			ai = new AI(board, false, 0);
+		}
 		graphicsController.setBoard(board);
 		graphicsController.renderPieces();
 	}
 
 	public void start() {
 		thread = new Thread(this);
-		// System.out.println("\n \n");
-
-		if (!thread.isAlive())
+		if (!thread.isAlive()) {
 			thread.start();
+		}
 	}
 
 	public void run() {
 		try {
 			while (true) {
-				thread.sleep(threadDelay);
+				Thread.sleep(threadDelay);
 
 				if (isGamePlaying) {
 					timer.decrementTime(threadDelay, isWhiteTurn);

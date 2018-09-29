@@ -1,73 +1,78 @@
+
 public class Timer {
 	
-	//class constants
-	public static final int WHITE = 0;
-	public static final int BLACK = 1;
 	
 	//instance variables
-	private int blackTime_; //milliseconds
-	private int whiteTime_; //milliseconds
+	private int blackTime; //milliseconds
+	private int whiteTime; //milliseconds
 	
-	
-	//initializes the timer values to the given time
-	//pre: startTime greater than 0
-	public Timer(int startTime)
-	{
-		//check precondition
-		if(startTime <= 0)
-			throw new IllegalArgumentException("Timer start time must be greater than 0: " + startTime);
-		
-		blackTime_ = startTime;
-		whiteTime_ = startTime;
+
+	/**
+	 * Creates a new Timer object with both player's remaining
+	 * time initialized to the starting value.
+	 * 
+	 * @param startTime The initial time for both players. Must be greater than 0.
+	 */
+	public Timer(int startTime) {
+		setTime(startTime);
 	}
 	
-	//decreases the timer for the given player by the given amount
-	//pre: decrement > 0
-	public void decrementTime(int decrement, boolean isWhite)
-	{
-		//check precondition
-		if(decrement <= 0)
-			throw new IllegalArgumentException("Timer decrement must be greater than 0: " + decrement);
-		
-		if(isWhite)
-			whiteTime_ -= decrement;
-		else
-			blackTime_ -= decrement;
-	}
-	
-	//increases the timer for the given player by the given amount
-	//pre: increment >= 0
-	public void incrementTime(int increment, boolean isWhite)
-	{
-		//check precondition
-		if(increment < 0)
-			throw new IllegalArgumentException("Timer increment must be greater than or equal to 0: " + increment);
-		
-		if(isWhite)
-			whiteTime_ += increment;
-		else
-			blackTime_ += increment;
-	}
-	
-	//return the value of the timer for the specific player
-	//pre: none
-	public int getRemainingTime(boolean isWhite)
-	{		
-		if(isWhite)
-			return whiteTime_;
-		else
-			return blackTime_;
-	}
-	
-	//set the time for both timers to the specified time
-	//pre: time > 0
-	public void setTime(int time)
-	{
-		//check precondition
-		if(time <= 0)
+	/**
+	 * Sets the time remaining for both players to the specified time.
+	 * 
+	 * @param time The time in milliseconds. Must be greater than 0.
+	 */
+	public void setTime(int time) {
+		if(time <= 0) {
 			throw new IllegalArgumentException("Time must be greater than 0: " + time);
+		}	
+		whiteTime = time;
+		blackTime = time;
+	}
+	
+	/**
+	 * Decreases the time remaining for the given player by the given amount.
+	 * 
+	 * @param decrement The amount to decrement the timer. Must be greater than 0.
+	 * @param isWhite A boolean indicating whether to decrement the white or black timer.
+	 */
+	public void decrementTime(int decrement, boolean isWhite) {
+		if(decrement <= 0) {
+			throw new IllegalArgumentException("Timer decrement must be greater than 0: " + decrement);
+		}
 		
-		whiteTime_ = time;
-		blackTime_ = time;
+		if(isWhite) {
+			whiteTime -= decrement;
+		} else {
+			blackTime -= decrement;
+		}
+	}
+	
+	/**
+	 * Increases the time remaining for the given player by the given amount.
+	 * 
+	 * @param increment The amount to increment the timer. Must be non-negative.
+	 * @param isWhite
+	 */
+	public void incrementTime(int increment, boolean isWhite) {
+		if(increment < 0) {
+			throw new IllegalArgumentException("Timer increment must be greater than or equal to 0: " + increment);
+		}
+		
+		if(isWhite) {
+			whiteTime += increment;
+		} else {
+			blackTime += increment;
+		}
+	}
+	
+	/**
+	 * Returns the time remaining for the specified player.
+	 * 
+	 * @param isWhite A boolean indicating whether to get white or black's remaining time.
+	 * @return The time remaining for the specified player.
+	 */
+	public int getRemainingTime(boolean isWhite) {		
+		return isWhite ? whiteTime : blackTime;
 	}	
 }
