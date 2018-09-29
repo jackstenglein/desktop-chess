@@ -158,7 +158,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	private void switchTurns() {
 		timer.incrementTime(timeBack, isWhiteTurn);
 		isWhiteTurn = !isWhiteTurn;
-		if (MoveValidator.isCheckMate(isWhiteTurn, board)) {
+		if (board.isCheckMate(isWhiteTurn)) {
 			if (isWhiteTurn) {
 				gameOver("Black wins by checkmate!");
 			} else {
@@ -206,16 +206,6 @@ public class Game implements MouseListener, Runnable, ActionListener {
 				System.out.println("Clicked space: " + clickedSpace);
 				Piece piece = clickedSpace.getPiece();
 				System.out.println("Piece in clicked space: " + piece);
-
-				/*
-				 * if (piece != null) { System.out.println("Clicked piece: " +
-				 * piece); System.out.println("Attacked pieces: " +
-				 * MoveValidator.findAttackedPieces(piece, board_));
-				 * System.out.println("Attacking pieces: " +
-				 * MoveValidator.findPiecesAttackingPiece(piece, board_));
-				 * System.out.println("Find defending pieces: " +
-				 * MoveValidator.findDefendingPieces(piece, board_)); }
-				 */
 
 				// CASE 1
 				Move selectedMove = null;
@@ -267,7 +257,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			throw new IllegalArgumentException("Piece cannot be null");
 		}
 
-		possibleMoves = MoveValidator.findLegalMoves(piece, board, true);
+		possibleMoves = board.findLegalMoves(piece, true);
 
 		for (int i = 0; i < possibleMoves.size(); i++) {
 			Move move = possibleMoves.get(i);
