@@ -1,3 +1,6 @@
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
 /**
  * A class that represents a chess piece.
  * 
@@ -287,5 +290,63 @@ public class Piece implements Comparable<Piece> {
 			return 1;
 		
 		return 0;
+	}
+	
+	/**
+	 * Paints this piece in the specified graphics context. If the 
+	 * piece is captured, it is drawn in the appropriate HUD bar.
+	 * If the piece is active, it is drawn on the board. Returns the
+	 * new number of lost pieces drawn, including this piece.
+	 * 
+	 * @param graphic The graphic context to draw in. Must not be null.
+	 * @param lostPiecesDrawn The number of captured pieces already drawn in
+	 *                        this piece's HUD bar. Must be non-negative.
+	 * @return The new number of captured pieces drawn.
+	 */
+	public int paint(Graphics graphic, int lostPiecesDrawn) {
+		if (graphic == null) {
+			throw new IllegalArgumentException("The graphics object cannot be null.");
+		} else if (lostPiecesDrawn < 0) {
+			throw new IllegalArgumentException("The number of lost pieces already drawn cannot be negative.");
+		}
+		
+		if (isCaptured) {
+			paintCapturedPiece(graphic, lostPiecesDrawn);
+			return lostPiecesDrawn + 1;
+		} else {
+			paintActivePiece(graphic);
+			return lostPiecesDrawn;
+		}
+	}
+	
+	/**
+	 * Paints a captured piece in the specified graphics context. Uses
+	 * the lostPiecesDrawn argument to find the horizontal position in 
+	 * which to draw this piece.
+	 * 
+	 * @param graphic The graphics context to draw in. Must not be null.
+	 * @param lostPiecesDrawn The number of captured pieces already drawn in
+	 * 					      this piece's HUD bar. Must be non-negative.
+	 */
+	private void paintCapturedPiece(Graphics graphic, int lostPiecesDrawn) {
+		int yPos = isWhite ? GraphicsController.LOST_PIECE_Y_WHITE : GraphicsController.LOST_PIECE_Y_BLACK;
+		graphic.drawImage(GraphicsController.getCapturedImage(type, isWhite), 
+				          GraphicsController.LOST_PIECE_START_X + GraphicsController.LOST_PIECE_X_DIFFERENCE * lostPiecesDrawn, 
+				          yPos, 
+				          null);
+	}
+	
+	/**
+	 * Paints an active piece in the specified graphics context.
+	 * 
+	 * @param graphic The graphics context in which to draw this piece. Must not be null.
+	 */
+	private void paintActivePiece(Graphics graphic) {
+		BufferedImage image = GraphicsController.getActiveImage(type, isWhite);
+		int width = image.getWidth(null);
+		int height = image.getHeight(null);
+		int x = (col * Game.SPACE_SIDE_LENGTH) + (Game.SPACE_SIDE_LENGTH - width) / 2;
+		int y = (row * Game.SPACE_SIDE_LENGTH) + (Game.SPACE_SIDE_LENGTH - height) / 2;
+		graphic.drawImage(image, x, y + GraphicsController.HUD_BAR_HEIGHT, null);
 	}
 }

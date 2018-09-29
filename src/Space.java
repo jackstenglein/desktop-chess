@@ -1,3 +1,8 @@
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
 
 public class Space {
 	
@@ -51,32 +56,12 @@ public class Space {
 	}
 	
 	/**
-	 * Returns whether this space should be rendered as
-	 * selected or not.
-	 * 
-	 * @return A boolean indicating whether the space is selected.
-	 */
-	public boolean isSelected() {
-		return isSelected;
-	}
-	
-	/**
 	 * Sets the space to be displayed as a taking move or not.
 	 * 
 	 * @param isTakingMove A boolean indicating whether this space is a taking move.
 	 */
 	public void setTakingMove(boolean isTakingMove) {
 		this.isTakingMove = isTakingMove;
-	}
-	
-	/**
-	 * Returns whether this space should be rendered as a taking move
-	 * or not.
-	 * 
-	 * @return A boolean indicating whether the space is a taking move.
-	 */
-	public boolean isTakingMove() {
-		return isTakingMove;
 	}
 	
 	/**
@@ -174,5 +159,38 @@ public class Space {
 				return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Paints this space using the given graphics object. The space
+	 * is painted with a green outline if it is selected, a red outline
+	 * if it is a taking move and a blue outline if it is a possible move.
+	 * 
+	 * @param graphic The graphics context in which to paint the space.
+	 */
+	public void paint(Graphics graphic) {
+		Graphics2D g2 = (Graphics2D) graphic;
+		float thickness = 2;
+		Stroke oldStroke = g2.getStroke();
+		g2.setStroke(new BasicStroke(thickness));
+
+		if (isSelected) {
+			graphic.setColor(Color.GREEN);
+			graphic.drawRect(col * Game.SPACE_SIDE_LENGTH,
+					row * Game.SPACE_SIDE_LENGTH + GraphicsController.HUD_BAR_HEIGHT, Game.SPACE_SIDE_LENGTH,
+					Game.SPACE_SIDE_LENGTH);
+		} else if (isTakingMove) {
+			graphic.setColor(Color.RED);
+			graphic.drawRect(col * Game.SPACE_SIDE_LENGTH,
+					row * Game.SPACE_SIDE_LENGTH + GraphicsController.HUD_BAR_HEIGHT, Game.SPACE_SIDE_LENGTH,
+					Game.SPACE_SIDE_LENGTH);
+		} else if (isPossibleMove) {
+			graphic.setColor(Color.BLUE);
+			graphic.drawRect(col * Game.SPACE_SIDE_LENGTH,
+					row * Game.SPACE_SIDE_LENGTH + GraphicsController.HUD_BAR_HEIGHT, Game.SPACE_SIDE_LENGTH,
+					Game.SPACE_SIDE_LENGTH);
+		}
+
+		g2.setStroke(oldStroke);
 	}
 }

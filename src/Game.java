@@ -1,6 +1,7 @@
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.*;
 
@@ -35,7 +36,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	public static final String CUSTOM_TIME_OPTION = "Custom";
 
 	// instance variables
-	private static GraphicsController graphicsController;
+	private GraphicsController graphicsController;
 	private Board board;
 	private AI ai;
 	private boolean isSinglePlayer;
@@ -47,7 +48,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	private boolean isGamePlaying;
 	private boolean isGameOver;
 	private Thread thread;
-	private boolean isRunning;
+	//private boolean isRunning;
 	private int threadDelay = 17;
 	private int startTime;
 	private int timeBack;
@@ -55,14 +56,14 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	// creates the frame and instantiates a new Game object
 	public static void main(String[] args) {
 		final Game game = new Game();
-		graphicsController.renderPieces();
+		GraphicsController.loadImages(game);
 		game.start();
 
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					setUpJFrame(game);
+					game.setUpJFrame();
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -79,98 +80,24 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		isGameOver = false;
 		startTime = DEFAULT_GAME_TIME;
 		board = new Board();
-		board.setPieces(createPieces(false), createPieces(true));
 		ai = new AI(board, false, 0);
 		isSinglePlayer = true;
 		timer = new Timer(startTime);
 		graphicsController = new GraphicsController(board);
+		graphicsController.renderPieces();
 	}
 
 	/**
 	 * Resets the game state variables and objects.
 	 */
 	public void newGame() {
-		// Reset all game variables
 		isWhiteTurn = true;
 		isGamePlaying = false;
 		isGameOver = false;
 		timer.setTime(startTime);
-
-		// Reset game objects
 		board = new Board();
-		board.setPieces(createPieces(false), createPieces(true));
 		graphicsController.setBoard(board);
 		graphicsController.renderPieces();
-	}
-
-	private ArrayList<Piece> createPieces(boolean isWhite) {
-		ArrayList<Piece> piecesToCreate = new ArrayList<Piece>();
-
-		// create the pawns
-		piecesToCreate.addAll(createPawns(isWhite));
-
-		int row;
-		if (isWhite)
-			row = 7;
-		else
-			row = 0;
-
-		// create the rooks
-		Piece piece = new Piece(Piece.PieceType.ROOK, isWhite, row, 0);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 0).setPiece(piece);
-
-		piece = new Piece(Piece.PieceType.ROOK, isWhite, row, 7);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 7).setPiece(piece);
-
-		// create the knights
-		piece = new Piece(Piece.PieceType.KNIGHT, isWhite, row, 1);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 1).setPiece(piece);
-
-		piece = new Piece(Piece.PieceType.KNIGHT, isWhite, row, 6);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 6).setPiece(piece);
-
-		// create the bishops
-		piece = new Piece(Piece.PieceType.BISHOP, isWhite, row, 2);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 2).setPiece(piece);
-
-		piece = new Piece(Piece.PieceType.BISHOP, isWhite, row, 5);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 5).setPiece(piece);
-
-		// create the queen
-		piece = new Piece(Piece.PieceType.QUEEN, isWhite, row, 3);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 3).setPiece(piece);
-
-		// create the king
-		piece = new Piece(Piece.PieceType.KING, isWhite, row, 4);
-		piecesToCreate.add(piece);
-		board.getSpace(row, 4).setPiece(piece);
-
-		return piecesToCreate;
-	}
-
-	private ArrayList<Piece> createPawns(boolean isWhite) {
-		ArrayList<Piece> pawns = new ArrayList<Piece>();
-
-		int row;
-		if (isWhite)
-			row = 6;
-		else
-			row = 1;
-
-		for (int c = 0; c <= Board.MAX_COL; c++) {
-			Piece pawn = new Piece(Piece.PieceType.PAWN, isWhite, row, c);
-			pawns.add(pawn);
-			board.getSpace(row, c).setPiece(pawn);
-		}
-
-		return pawns;
 	}
 
 	public void start() {
@@ -209,12 +136,11 @@ public class Game implements MouseListener, Runnable, ActionListener {
 
 	/**
 	 * Displays a game over message with an option to start a new game or quit.
-	 * <br>pre: message != null
-	 * @param message
+	 * 
+	 * @param message The message to display. May not be null.
 	 */
 	private void gameOver(String message) {
 		
-		//check precondition
 		if(message == null)
 			throw new IllegalArgumentException("message may not be null.");
 		
@@ -243,7 +169,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			}
 		} else if (isSinglePlayer && isWhiteTurn == ai.isWhite()) {
 			//System.out.println("AI choice for next move: ");
-			Move move = ai.getNextMove();
+			//Move move = ai.getNextMove();
 			//System.out.println(move);
 		}
 	}
@@ -276,11 +202,13 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		if (!isGameOver) {
 			int row = getRowOnBoard(event.getY());
 			int col = getColOnBoard(event.getX());
-			// System.out.println("Mouse clicked: (" + row + ", " + col + ")");
+			System.out.println("Mouse clicked: (" + row + ", " + col + ")");
 
 			if (row != -1 && col != -1) {
 				Space clickedSpace = board.getSpace(row, col);
+				System.out.println("Clicked space: " + clickedSpace);
 				Piece piece = clickedSpace.getPiece();
+				System.out.println("Piece in clicked space: " + piece);
 
 				/*
 				 * if (piece != null) { System.out.println("Clicked piece: " +
@@ -351,15 +279,6 @@ public class Game implements MouseListener, Runnable, ActionListener {
 			else
 				move.getDestination().setPossibleMove(true);
 		}
-
-		/*
-		 * if (piece.getType() == Piece.TYPE_PAWN) { enPassantMove_ =
-		 * MoveValidator.findAvailableEnPassantMove(piece, board_);
-		 * 
-		 * if (enPassantMove_ != null &&
-		 * MoveValidator.isCheckAfterMove(enPassantMove_, board_))
-		 * enPassantMove_ = null; else enPassantMove_.setTakingMove(true); }
-		 */
 	}
 
 	/**
@@ -419,8 +338,6 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	 * Performs the various actions for the JMenuBarItems.
 	 */
 	public void actionPerformed(ActionEvent event) {
-		final int SECONDS_PER_MINUTE = 60;
-		final int MILLISECONDS_PER_SECOND = 1000;
 		
 		if (event.getActionCommand().equals(NEW_GAME_OPTION)) {
 			newGame();
@@ -431,33 +348,33 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		} else if (event.getActionCommand().equals(QUIT_OPTION)) {
 			System.exit(0);
 		} else if (event.getActionCommand().equals(FIVE_MIN_OPTION) && !isGamePlaying) {
-			startTime = 5 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(5);
 			timer.setTime(startTime);
 			timeBack = 0;
 		} else if (event.getActionCommand().equals(TEN_MIN_OPTION) && !isGamePlaying) {
-			startTime = 10 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(10);
 			timer.setTime(startTime);
 			timeBack = 0;
 		} else if (event.getActionCommand().equals(THIRTY_MIN_OPTION) && !isGamePlaying) {
-			startTime = 30 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(30);
 			timer.setTime(startTime);
 			timeBack = 0;
 		} else if (event.getActionCommand().equals(ONE_HOUR_OPTION) && !isGamePlaying) {
-			startTime = 60 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(60);
 			timer.setTime(startTime);
 			timeBack = 0;
 		} else if (event.getActionCommand().equals(TWO_BY_ONE_OPTION) && !isGamePlaying) {
-			startTime = 2 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(2);
 			timer.setTime(startTime);
-			timeBack = 1 * MILLISECONDS_PER_SECOND;
+			timeBack = (int)TimeUnit.SECONDS.toMillis(1);
 		} else if (event.getActionCommand().equals(THREE_BY_TWO_OPTION) && !isGamePlaying) {
-			startTime = 3 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(3);
 			timer.setTime(startTime);
-			timeBack = 2 * MILLISECONDS_PER_SECOND;
+			timeBack = (int)TimeUnit.SECONDS.toMillis(2);
 		} else if (event.getActionCommand().equals(FIVE_BY_FIVE_OPTION) && !isGamePlaying) {
-			startTime = 5 * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+			startTime = (int)TimeUnit.MINUTES.toMillis(5);
 			timer.setTime(startTime);
-			timeBack = 5 * MILLISECONDS_PER_SECOND;
+			timeBack = (int)TimeUnit.SECONDS.toMillis(5);
 		} else if (event.getActionCommand().equals(CUSTOM_TIME_OPTION) && !isGamePlaying) {
 			getCustomTime();
 		}
@@ -482,19 +399,11 @@ public class Game implements MouseListener, Runnable, ActionListener {
 	}
 
 	/**
-	 * Helper method that sets up the JFrame and JMenuBar for the specified
-	 * game.<br>
-	 * pre: game != null
+	 * Helper method that sets up the JFrame and JMenuBar.
 	 * 
-	 * @param game
-	 *            The game to make the JFrame and JMenuBar for. May not be null.
 	 * @throws Exception
 	 */
-	private static void setUpJFrame(Game game) throws Exception {
-
-		// check precondition
-		if (game == null)
-			throw new IllegalArgumentException("Game may not be null.");
+	private void setUpJFrame() throws Exception {
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
@@ -506,7 +415,7 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		frame.setMinimumSize(dimension);
 		frame.setMaximumSize(dimension);
 		frame.setResizable(false);
-		frame.addMouseListener(game);
+		frame.addMouseListener(this);
 		frame.setTitle(TITLE);
 		frame.add(graphicsController);
 		frame.pack();
@@ -524,16 +433,16 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		 */
 		JMenu gameMenu = new JMenu("Game");
 		JMenuItem newGameItem = new JMenuItem(NEW_GAME_OPTION);
-		newGameItem.addActionListener(game);
+		newGameItem.addActionListener(this);
 
 		JMenu gameModeMenu = new JMenu("Mode");
 		JMenuItem singlePlayerItem = new JMenuItem(SINGLE_PLAYER_OPTION);
-		singlePlayerItem.addActionListener(game);
+		singlePlayerItem.addActionListener(this);
 		JMenuItem twoPlayerItem = new JMenuItem(TWO_PLAYER_OPTION);
-		twoPlayerItem.addActionListener(game);
+		twoPlayerItem.addActionListener(this);
 
 		JMenuItem quitItem = new JMenuItem(QUIT_OPTION);
-		quitItem.addActionListener(game);
+		quitItem.addActionListener(this);
 
 		gameModeMenu.add(singlePlayerItem);
 		gameModeMenu.add(twoPlayerItem);
@@ -550,21 +459,21 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		JMenu timerMenu = new JMenu("Timer");
 		JMenu presetMenu = new JMenu("Presets");
 		JMenuItem min5Item = new JMenuItem(FIVE_MIN_OPTION);
-		min5Item.addActionListener(game);
+		min5Item.addActionListener(this);
 		JMenuItem min10Item = new JMenuItem(TEN_MIN_OPTION);
-		min10Item.addActionListener(game);
+		min10Item.addActionListener(this);
 		JMenuItem min30Item = new JMenuItem(THIRTY_MIN_OPTION);
-		min30Item.addActionListener(game);
+		min30Item.addActionListener(this);
 		JMenuItem hourItem = new JMenuItem(ONE_HOUR_OPTION);
-		hourItem.addActionListener(game);
+		hourItem.addActionListener(this);
 		JMenuItem min2sec1Item = new JMenuItem(TWO_BY_ONE_OPTION);
-		min2sec1Item.addActionListener(game);
+		min2sec1Item.addActionListener(this);
 		JMenuItem min3sec2Item = new JMenuItem(THREE_BY_TWO_OPTION);
-		min3sec2Item.addActionListener(game);
+		min3sec2Item.addActionListener(this);
 		JMenuItem min5sec5Item = new JMenuItem(FIVE_BY_FIVE_OPTION);
-		min5sec5Item.addActionListener(game);
+		min5sec5Item.addActionListener(this);
 		JMenuItem customItem = new JMenuItem(CUSTOM_TIME_OPTION);
-		customItem.addActionListener(game);
+		customItem.addActionListener(this);
 		presetMenu.add(min5Item);
 		presetMenu.add(min10Item);
 		presetMenu.add(min30Item);
@@ -580,7 +489,8 @@ public class Game implements MouseListener, Runnable, ActionListener {
 		// Create and add the computer menu
 		JMenu computerMenu = new JMenu("Computer");
 		menuBar.add(computerMenu);
-
+		
+		// Add the final menu bar to the frame
 		frame.setJMenuBar(menuBar);
 	}
 

@@ -1,3 +1,4 @@
+import java.awt.Graphics;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
@@ -11,71 +12,96 @@ public class Board {
 	// class constants
 	public static final int MIN_ROW = 0, MIN_COL = 0;
 	public static final int MAX_ROW = 7, MAX_COL = 7;
+	
+	// starting columns for pieces
+	private static final int[] ROOK_COLUMNS = new int[] {MIN_COL, MAX_COL};
+	private static final int[] KNIGHT_COLUMNS = new int[] {1, 6};
+	private static final int[] BISHOP_COLUMNS = new int[] {2, 5};
+	private static final int QUEEN_COLUMN = 3;
+	private static final int KING_COLUMN = 4;
 
 	// instance variables
-	private Space[][] spaces_;
-	private ArrayList<Piece> blackPieces_;
-	private ArrayList<Piece> whitePieces_;
-	private Piece blackKing_;
-	private Piece whiteKing_;
-	private int blackPawnsLost_;
-	private int blackKnightsLost_;
-	private int blackBishopsLost_;
-	private int blackRooksLost_;
-	private int blackQueensLost_;
-	private int whitePawnsLost_;
-	private int whiteKnightsLost_;
-	private int whiteBishopsLost_;
-	private int whiteRooksLost_;
-	private int whiteQueensLost_;
-
+	private Space[][] spaces;
+	private ArrayList<Piece> blackPieces;
+	private ArrayList<Piece> whitePieces;
+	private Piece blackKing;
+	private Piece whiteKing;
+	
+	
 	/**
-	 * Creates a new Board object with 64 empty Spaces.<br>
-	 * pre: none
+	 * Creates a new Board object with pieces in their starting location.
 	 */
 	public Board() {
-		spaces_ = new Space[8][8];
-		for (int r = 0; r <= Board.MAX_ROW; r++)
-			for (int c = 0; c <= Board.MAX_COL; c++) {
-				Space space = new Space(r, c);
-				setSpace(r, c, space);
+		spaces = new Space[MAX_ROW + 1][MAX_COL + 1];
+		for (int r = 0; r <= MAX_ROW; r++) {
+			for (int c = 0; c <= MAX_COL; c++) {
+				spaces[r][c] = new Space(r, c);
 			}
+		}
+		whitePieces = createPieces(true);
+		whiteKing = whitePieces.get(whitePieces.size() - 1);
+		blackPieces = createPieces(false);
+		blackKing = blackPieces.get(blackPieces.size() - 1);
 	}
 
-	// initializes a board with the same spaces, blackPieces_, whitePieces_ as
+	// initializes a board with the same spaces, blackPieces, whitePieces as
 	// board
 	public Board(Board board) {
 
 	}
+	
+	private ArrayList<Piece> createPieces(boolean isWhite) {
+		
+		ArrayList<Piece> pieces = new ArrayList<Piece>();
+		pieces.addAll(createPawns(isWhite));
 
-	/**
-	 * Sets the list of Pieces and saves a reference to the kings.<br>
-	 * pre: blackPieces != null && whitePieces != null
-	 * 
-	 * @param blackPieces
-	 *            The list of black Pieces. May not be null.
-	 * @param whitePieces
-	 *            The list of white Pieces. May not be null.
-	 */
-	public void setPieces(ArrayList<Piece> blackPieces, ArrayList<Piece> whitePieces) {
-
-		// check preconditions
-		if (blackPieces == null && whitePieces == null)
-			throw new IllegalArgumentException("The lists of Pieces may not be null.");
-
-		blackPieces_ = blackPieces;
-		whitePieces_ = whitePieces;
-
-		// set the kings to the correct Pieces
-		for (int i = 0; i < blackPieces_.size(); i++) {
-			if (blackPieces_.get(i).getType() == Piece.PieceType.KING)
-				blackKing_ = blackPieces_.get(i);
+		int row = isWhite ? MAX_ROW : MIN_ROW;
+		
+		// create the knights
+		for (int col : KNIGHT_COLUMNS) {
+			Piece piece = new Piece(Piece.PieceType.KNIGHT, isWhite, row, col);
+			pieces.add(piece);
+			spaces[row][col].setPiece(piece);
 		}
 
-		for (int i = 0; i < whitePieces_.size(); i++) {
-			if (whitePieces_.get(i).getType() == Piece.PieceType.KING)
-				whiteKing_ = whitePieces_.get(i);
+		// create the bishops
+		for (int col : BISHOP_COLUMNS) {
+			Piece piece = new Piece(Piece.PieceType.BISHOP, isWhite, row, col);
+			pieces.add(piece);
+			spaces[row][col].setPiece(piece);
 		}
+
+		// create the rooks
+		for (int col : ROOK_COLUMNS) {
+			Piece piece = new Piece(Piece.PieceType.ROOK, isWhite, row, col);
+			pieces.add(piece);
+			spaces[row][col].setPiece(piece);
+		}
+
+		// create the queen
+		Piece piece = new Piece(Piece.PieceType.QUEEN, isWhite, row, QUEEN_COLUMN);
+		pieces.add(piece);
+		spaces[row][QUEEN_COLUMN].setPiece(piece);
+
+		// create the king
+		piece = new Piece(Piece.PieceType.KING, isWhite, row, KING_COLUMN);
+		pieces.add(piece);
+		spaces[row][KING_COLUMN].setPiece(piece);
+
+		return pieces;
+	}
+
+	private ArrayList<Piece> createPawns(boolean isWhite) {
+		ArrayList<Piece> pawns = new ArrayList<Piece>();
+
+		int row = isWhite ? MAX_ROW - 1 : MIN_ROW + 1;
+		for (int c = 0; c <= Board.MAX_COL; c++) {
+			Piece pawn = new Piece(Piece.PieceType.PAWN, isWhite, row, c);
+			pawns.add(pawn);
+			spaces[row][c].setPiece(pawn);
+		}
+
+		return pawns;
 	}
 
 	/**
@@ -97,7 +123,7 @@ public class Board {
 		else if (space == null)
 			throw new IllegalArgumentException("The Space may not be null.");
 
-		spaces_[row][col] = space;
+		spaces[row][col] = space;
 	}
 
 	/**
@@ -115,7 +141,7 @@ public class Board {
 		if (row < MIN_ROW || row > MAX_ROW || col < MIN_COL || col > MAX_COL)
 			return null;
 
-		return spaces_[row][col];
+		return spaces[row][col];
 	}
 
 	/**
@@ -133,11 +159,6 @@ public class Board {
 
 		// check if pawn needs promotion
 		checkPawnPromotion(move.getMovedPiece());
-		
-		// reset all Spaces to not be selected
-		for(int r = 0; r <= MAX_ROW; r++)
-			for(int c = 0; c <= MAX_COL; c++)
-				spaces_[r][c].setTakingMove(false);
 	}
 
 	/**
@@ -192,8 +213,8 @@ public class Board {
 
 		// capture a Piece if one exists to be captured
 		if (capturedPiece != null) {
-			pieceLost(capturedPiece);
-			spaces_[capturedPiece.getRow()][capturedPiece.getCol()].setPiece(null);
+			capturedPiece.setCaptured(true);
+			spaces[capturedPiece.getRow()][capturedPiece.getCol()].setPiece(null);
 		}
 
 		movedPiece.setRow(dest.getRow());
@@ -229,10 +250,10 @@ public class Board {
 		Space rookSpace;
 		int changeFromDest;
 		if (source.getCol() > dest.getCol()) {
-			rookSpace = spaces_[source.getRow()][Board.MIN_COL];
+			rookSpace = spaces[source.getRow()][Board.MIN_COL];
 			changeFromDest = 1;
 		} else {
-			rookSpace = spaces_[source.getRow()][Board.MAX_COL];
+			rookSpace = spaces[source.getRow()][Board.MAX_COL];
 			changeFromDest = -1;
 		}
 
@@ -244,29 +265,23 @@ public class Board {
 		// move the rook
 		rookToMove.setCol(dest.getCol() + changeFromDest);
 		rookToMove.incrementTimesMoved();
-		Space newRookSpace = spaces_[dest.getRow()][dest.getCol() + changeFromDest];
+		Space newRookSpace = spaces[dest.getRow()][dest.getCol() + changeFromDest];
 		newRookSpace.setPiece(rookToMove);
 		
 		// reset all Spaces to not be selected
 		for(int r = 0; r <= MAX_ROW; r++)
 			for(int c = 0; c <= MAX_COL; c++)
-				spaces_[r][c].setTakingMove(false);
+				spaces[r][c].setTakingMove(false);
 	}
 
 	/**
 	 * Helper method for makeMove() that resets movedLastTurn for the given
-	 * color's Pieces.<br>
-	 * pre: none
+	 * color's Pieces.
 	 * 
-	 * @param blackPieces
-	 *            a boolean indicating whether to reset black's pieces.
+	 * @param isBlack A boolean indicating whether to reset black's pieces.
 	 */
-	private void resetMovedLastTurn(boolean blackPieces) {
-		ArrayList<Piece> otherPieces;
-		if (blackPieces)
-			otherPieces = blackPieces_;
-		else
-			otherPieces = whitePieces_;
+	private void resetMovedLastTurn(boolean isBlack) {
+		ArrayList<Piece> otherPieces = isBlack ? blackPieces : whitePieces;
 
 		for (int i = 0; i < otherPieces.size(); i++)
 			otherPieces.get(i).setHasJustMoved(false);
@@ -309,81 +324,6 @@ public class Board {
 	}
 
 	/**
-	 * Removes the given Piece from the corresponding list of Pieces and adds to
-	 * the count of lost Pieces.
-	 * 
-	 * @param piece
-	 *            The Piece that is captured. May not be null.
-	 */
-	public void pieceLost(Piece piece) {
-		// check precondition
-		if (piece == null)
-			throw new IllegalArgumentException("Piece may not be null");
-
-		if (blackPieces_.contains(piece)) {
-			System.out.println("Remove black piece");
-			blackPieces_.remove(piece);
-		} else if (whitePieces_.contains(piece)) {
-			System.out.println("Remove white piece");
-			whitePieces_.remove(piece);
-		} else
-			System.out.println("Piece not found");
-
-		piece.setCaptured(true);
-		incrementLostCount(piece.isWhite(), piece.getType(), 1);
-	}
-
-	/**
-	 * Helper method for pieceLost() that increments the count of lost Pieces.
-	 * 
-	 * @param isWhite A boolean indicating whether the lost Piece was white.
-	 * @param type The type of the Piece.
-	 */
-	private void incrementLostCount(boolean isWhite, Piece.PieceType type, int increment) {
-		if (isWhite) {
-			switch (type) {
-				case PAWN:
-					whitePawnsLost_ += increment;
-					break;
-				case KNIGHT:
-					whiteKnightsLost_ += increment;
-					break;
-				case BISHOP:
-					whiteBishopsLost_ += increment;
-					break;
-				case ROOK:
-					whiteRooksLost_ += increment;
-					break;
-				case QUEEN:
-					whiteQueensLost_ += increment;
-					break;
-				default:
-					break;
-			}
-		} else {
-			switch (type) {
-				case PAWN:
-					blackPawnsLost_ += increment;
-					break;
-				case KNIGHT:
-					blackKnightsLost_ += increment;
-					break;
-				case BISHOP:
-					blackBishopsLost_ += increment;
-					break;
-				case ROOK:
-					blackRooksLost_ += increment;
-					break;
-				case QUEEN:
-					blackQueensLost_ += increment;
-					break;
-				default:
-					break;
-			}
-		}
-	}
-
-	/**
 	 * Update the Board to undo the specified Move. <br>
 	 * pre: move != null
 	 * 
@@ -409,8 +349,9 @@ public class Board {
 
 		// restore a Piece if one was captured
 		else if (capturedPiece != null) {
-			pieceRestored(capturedPiece);
-			spaces_[capturedPiece.getRow()][capturedPiece.getCol()].setPiece(capturedPiece);
+			//pieceRestored(capturedPiece);
+			capturedPiece.setCaptured(false);
+			spaces[capturedPiece.getRow()][capturedPiece.getCol()].setPiece(capturedPiece);
 		}
 
 		movedPiece.setRow(source.getRow());
@@ -443,15 +384,15 @@ public class Board {
 		Space originalRookSpace;
 		int changeFromDest;
 		if (source.getCol() > dest.getCol()) {
-			originalRookSpace = spaces_[source.getRow()][Board.MIN_COL];
+			originalRookSpace = spaces[source.getRow()][Board.MIN_COL];
 			changeFromDest = 1;
 		} else {
-			originalRookSpace = spaces_[source.getRow()][Board.MAX_COL];
+			originalRookSpace = spaces[source.getRow()][Board.MAX_COL];
 			changeFromDest = -1;
 		}
 		
 		// reset the Space objects
-		Space newRookSpace = spaces_[dest.getRow()][dest.getCol() + changeFromDest];
+		Space newRookSpace = spaces[dest.getRow()][dest.getCol() + changeFromDest];
 		Piece rookToMove = newRookSpace.getPiece();
 		originalRookSpace.setPiece(rookToMove);
 		newRookSpace.setPiece(null);
@@ -460,30 +401,23 @@ public class Board {
 		rookToMove.setCol(originalRookSpace.getCol());
 		rookToMove.decrementTimesMoved();
 	}
-
-	/**
-	 * Restores the given Piece from the corresponding list of Pieces and
-	 * subtracts from the count of lost Pieces.
-	 * 
-	 * @param piece
-	 *            The Piece that was captured. May not be null.
-	 */
-	private void pieceRestored(Piece piece) {
-
-		// check precondition
-		if (piece == null)
-			throw new IllegalArgumentException("Piece may not be null");
-
-		if (piece.isWhite()) {
-			System.out.println("Add to white pieces");
-			whitePieces_.add(piece);
-		} else {
-			System.out.println("Add to black pieces");
-			blackPieces_.add(piece);
+	
+	public void paint(Graphics graphic) {
+		for(int r = 0; r <= MAX_ROW; r++) {
+			for(int c = 0; c <= MAX_COL; c++) {
+				spaces[r][c].paint(graphic);
+			}
 		}
-
-		piece.setCaptured(false);
-		incrementLostCount(piece.isWhite(), piece.getType(), -1);
+		
+		int lostPieces = 0;
+		for(Piece piece : whitePieces) {
+			lostPieces = piece.paint(graphic, lostPieces);
+		}
+		
+		lostPieces = 0;
+		for(Piece piece : blackPieces) {
+			lostPieces = piece.paint(graphic, lostPieces);
+		}
 	}
 
 	/**
@@ -493,7 +427,7 @@ public class Board {
 	 * @return The list of black Pieces.
 	 */
 	public ArrayList<Piece> getBlackPieces() {
-		return blackPieces_;
+		return blackPieces;
 	}
 
 	/**
@@ -503,27 +437,8 @@ public class Board {
 	 * @return The list of white Pieces.
 	 */
 	public ArrayList<Piece> getWhitePieces() {
-		return whitePieces_;
+		return whitePieces;
 	}
-
-	/**
-	 * Sets the black king to the specified Piece. <br>
-	 * pre: blackKing != null && blackKing.getType() == Piece.TYPE_KING
-	 * 
-	 * @param blackKing
-	 *            The Piece to set this Board's black king to. Must match the
-	 *            given preconditions.
-	 */
-	/*
-	 * public void setBlackKing(Piece blackKing) {
-	 * 
-	 * // check preconditions if(blackKing == null) throw new
-	 * IllegalArgumentException("blackKing may not be null."); else
-	 * if(blackKing.getType() != Piece.TYPE_KING) throw new
-	 * IllegalArgumentException("blackKing must be of type king.");
-	 * 
-	 * blackKing_ = blackKing; }
-	 */
 
 	/**
 	 * Returns this Board's black king.<br>
@@ -532,7 +447,7 @@ public class Board {
 	 * @return The Board's black king
 	 */
 	public Piece getBlackKing() {
-		return blackKing_;
+		return blackKing;
 	}
 
 	/**
@@ -542,106 +457,6 @@ public class Board {
 	 * @return The Board's white king
 	 */
 	public Piece getWhiteKing() {
-		return whiteKing_;
-	}
-
-	/**
-	 * Returns the number of black pawns lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of black pawns lost
-	 */
-	public int getBlackPawnsLost() {
-		return blackPawnsLost_;
-	}
-
-	/**
-	 * Returns the number of black knights lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of black knights lost
-	 */
-	public int getBlackKnightsLost() {
-		return blackKnightsLost_;
-	}
-
-	/**
-	 * Returns the number of black bishops lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of black bishops lost
-	 */
-	public int getBlackBishopsLost() {
-		return blackBishopsLost_;
-	}
-
-	/**
-	 * Returns the number of black rooks lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of black rooks lost
-	 */
-	public int getBlackRooksLost() {
-		return blackRooksLost_;
-	}
-
-	/**
-	 * Returns the number of black queens lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of black queens lost
-	 */
-	public int getBlackQueensLost() {
-		return blackQueensLost_;
-	}
-
-	/**
-	 * Returns the number of white pawns lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of white pawns lost
-	 */
-	public int getWhitePawnsLost() {
-		return whitePawnsLost_;
-	}
-
-	/**
-	 * Returns the number of white knights lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of white knights lost
-	 */
-	public int getWhiteKnightsLost() {
-		return whiteKnightsLost_;
-	}
-
-	/**
-	 * Returns the number of white bishops lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of white bishops lost
-	 */
-	public int getWhiteBishopsLost() {
-		return whiteBishopsLost_;
-	}
-
-	/**
-	 * Returns the number of white rooks lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of white rooks lost
-	 */
-	public int getWhiteRooksLost() {
-		return whiteRooksLost_;
-	}
-
-	/**
-	 * Returns the number of white queens lost on this Board.<br>
-	 * pre: none
-	 * 
-	 * @return The number of white queens lost
-	 */
-	public int getWhiteQueensLost() {
-		return whiteQueensLost_;
+		return whiteKing;
 	}
 }

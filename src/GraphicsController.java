@@ -1,263 +1,226 @@
 import java.awt.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.*;
-import java.awt.BasicStroke;
 
+@SuppressWarnings("serial")
 public class GraphicsController extends JPanel {
 
+	// Constants for math with graphics
 	public static final int HUD_BAR_HEIGHT = 20;
-	public static final int LOST_PIECE_START_X = 200;
+	public static final int WHITE_HUD_START_Y = 556;
+	public static final int TIMER_START_X = 5;
+	public static final int BLACK_TIMER_START_Y = 15;
+	public static final int WHITE_TIMER_START_Y = 548;
+	public static final int LOST_PIECE_START_X = 175;
+	public static final int LOST_PIECE_X_DIFFERENCE = 15;
+	public static final int LOST_PIECE_Y_WHITE = 3;
+	public static final int LOST_PIECE_Y_BLACK = 535;
 
-	private Image boardImage_;
+	// Image file names
+	private static final String ACTIVE_PAWN_WHITE_FILENAME = "images/pawn_white.png";
+	private static final String ACTIVE_KNIGHT_WHITE_FILENAME = "images/knight_white.png";
+	private static final String ACTIVE_BISHOP_WHITE_FILENAME = "images/bishop_white.png";
+	private static final String ACTIVE_ROOK_WHITE_FILENAME = "images/rook_white.png";
+	private static final String ACTIVE_QUEEN_WHITE_FILENAME = "images/queen_white.png";
+	private static final String ACTIVE_KING_WHITE_FILENAME = "images/king_white.png";
+	private static final String[] ACTIVE_WHITE_FILENAMES = new String[] { ACTIVE_PAWN_WHITE_FILENAME,
+			ACTIVE_KNIGHT_WHITE_FILENAME, ACTIVE_BISHOP_WHITE_FILENAME, ACTIVE_ROOK_WHITE_FILENAME,
+			ACTIVE_QUEEN_WHITE_FILENAME, ACTIVE_KING_WHITE_FILENAME };
+	private static final String ACTIVE_PAWN_BLACK_FILENAME = "images/pawn_black.png";
+	private static final String ACTIVE_KNIGHT_BLACK_FILENAME = "images/knight_black.png";
+	private static final String ACTIVE_BISHOP_BLACK_FILENAME = "images/bishop_black.png";
+	private static final String ACTIVE_ROOK_BLACK_FILENAME = "images/rook_black.png";
+	private static final String ACTIVE_QUEEN_BLACK_FILENAME = "images/queen_black.png";
+	private static final String ACTIVE_KING_BLACK_FILENAME = "images/king_black.png";
+	private static final String[] ACTIVE_BLACK_FILENAMES = new String[] { ACTIVE_PAWN_BLACK_FILENAME,
+			ACTIVE_KNIGHT_BLACK_FILENAME, ACTIVE_BISHOP_BLACK_FILENAME, ACTIVE_ROOK_BLACK_FILENAME,
+			ACTIVE_QUEEN_BLACK_FILENAME, ACTIVE_KING_BLACK_FILENAME };
+	private static final String CAPTURED_PAWN_WHITE_FILENAME = "images/pawn_white_lost.png";
+	private static final String CAPTURED_KNIGHT_WHITE_FILENAME = "images/knight_white_lost.png";
+	private static final String CAPTURED_BISHOP_WHITE_FILENAME = "images/bishop_white_lost.png";
+	private static final String CAPTURED_ROOK_WHITE_FILENAME = "images/rook_white_lost.png";
+	private static final String CAPTURED_QUEEN_WHITE_FILENAME = "images/queen_white_lost.png";
+	private static final String[] CAPTURED_WHITE_FILENAMES = new String[] { CAPTURED_PAWN_WHITE_FILENAME,
+			CAPTURED_KNIGHT_WHITE_FILENAME, CAPTURED_BISHOP_WHITE_FILENAME, CAPTURED_ROOK_WHITE_FILENAME,
+			CAPTURED_QUEEN_WHITE_FILENAME };
+	private static final String CAPTURED_PAWN_BLACK_FILENAME = "images/pawn_black_lost.png";
+	private static final String CAPTURED_KNIGHT_BLACK_FILENAME = "images/knight_black_lost.png";
+	private static final String CAPTURED_BISHOP_BLACK_FILENAME = "images/bishop_black_lost.png";
+	private static final String CAPTURED_ROOK_BLACK_FILENAME = "images/rook_black_lost.png";
+	private static final String CAPTURED_QUEEN_BLACK_FILENAME = "images/queen_black_lost.png";
+	private static final String[] CAPTURED_BLACK_FILENAMES = new String[] { CAPTURED_PAWN_BLACK_FILENAME,
+			CAPTURED_KNIGHT_BLACK_FILENAME, CAPTURED_BISHOP_BLACK_FILENAME, CAPTURED_ROOK_BLACK_FILENAME,
+			CAPTURED_QUEEN_BLACK_FILENAME };
 
-	// black images
-	private Image blackPawnLostImage_;
-	private Image blackKnightLostImage_;
-	private Image blackBishopLostImage_;
-	private Image blackRookLostImage_;
-	private Image blackQueenLostImage_;
+	// Loaded image files
+	private static boolean hasLoadedImages = false;
+	private static HashMap<Piece.PieceType, BufferedImage> capturedImagesWhite;
+	private static HashMap<Piece.PieceType, BufferedImage> capturedImagesBlack;
+	private static HashMap<Piece.PieceType, BufferedImage> activeImagesWhite;
+	private static HashMap<Piece.PieceType, BufferedImage> activeImagesBlack;
+	private static BufferedImage boardImage;
 
-	// white images
-	private Image whitePawnLostImage_;
-	private Image whiteKnightLostImage_;
-	private Image whiteBishopLostImage_;
-	private Image whiteRookLostImage_;
-	private Image whiteQueenLostImage_;
+	// Instance variables
+	private Board board;
+	private String blackTimer;
+	private String whiteTimer;
+	
+	
+	/**
+	 * Loads the board image, as well as the active and captured piece images, into memory.
+	 * Uses the passed object's class to get the resources.
+	 * 
+	 * @param object The object to use to get the resources. Must not be null.
+	 */
+	public static void loadImages(Object object) {
+		if (object == null) {
+			throw new IllegalArgumentException("The object must not be null.");
+		}
+		
+		activeImagesWhite = new HashMap<Piece.PieceType, BufferedImage>(Piece.PieceType.values().length);
+		activeImagesBlack = new HashMap<Piece.PieceType, BufferedImage>(Piece.PieceType.values().length);
+		capturedImagesWhite = new HashMap<Piece.PieceType, BufferedImage>(Piece.PieceType.values().length - 1);
+		capturedImagesBlack = new HashMap<Piece.PieceType, BufferedImage>(Piece.PieceType.values().length - 1);
 
-	private HashMap<Piece.PieceType, BufferedImage> whiteImages_;
-	private HashMap<Piece.PieceType, BufferedImage> blackImages_;
+		try {
+			Piece.PieceType[] types = Piece.PieceType.values();
+			for (int i = 0; i < types.length - 1; i++) {
+				activeImagesWhite.put(types[i], ImageIO.read(object.getClass().getResource(ACTIVE_WHITE_FILENAMES[i])));
+				activeImagesBlack.put(types[i], ImageIO.read(object.getClass().getResource(ACTIVE_BLACK_FILENAMES[i])));
+				capturedImagesWhite.put(types[i], ImageIO.read(object.getClass().getResource(CAPTURED_WHITE_FILENAMES[i])));
+				capturedImagesBlack.put(types[i], ImageIO.read(object.getClass().getResource(CAPTURED_BLACK_FILENAMES[i])));
+			}
+			activeImagesWhite.put(types[types.length - 1], ImageIO.read(object.getClass().getResource(ACTIVE_WHITE_FILENAMES[types.length - 1])));
+			activeImagesBlack.put(types[types.length - 1], ImageIO.read(object.getClass().getResource(ACTIVE_BLACK_FILENAMES[types.length - 1])));
+			boardImage = ImageIO.read(object.getClass().getResource("images/board.png"));
+			hasLoadedImages = true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Returns the captured image associated with the given piece type and color.
+	 * Returns null for PieceType.KING, as a king cannot be captured.
+	 * <br>pre: GraphicsController.loadImages() must be called at least once before calling this method.
+	 * 
+	 * @param type The type of the piece.
+	 * @param isWhite A boolean indicating whether the image should be for white or black pieces.
+	 * @return The captured image associated with the piece type and color.
+	 */
+	public static Image getCapturedImage(Piece.PieceType type, boolean isWhite) {
+		if (!hasLoadedImages) {
+			throw new IllegalStateException("GraphicsController.loadImages() must be called before invoking getCapturedImage()");
+		}
+		return isWhite ? capturedImagesWhite.get(type) : capturedImagesBlack.get(type);
+	}
+	
+	/**
+	 * Returns the active image associated with the given piece type and color.
+	 * <br>pre: GraphicsController.loadImages() must be called at least once before calling this method.
+	 * 
+	 * @param type The type of the piece.
+	 * @param isWhite A boolean indicating whether the image should be for white or black pieces.
+	 * @return The active image associated with the piece type and color.
+	 */
+	public static BufferedImage getActiveImage(Piece.PieceType type, boolean isWhite) {
+		if (!hasLoadedImages) {
+			throw new IllegalStateException("GraphicsController.loadImages() must be called before invoking getActiveImage()");
+		}
+		return isWhite ? activeImagesWhite.get(type) : activeImagesBlack.get(type);
+	}
 
-	private Board board_;
-	private String blackTimer_;
-	private String whiteTimer_;
-
+	/**
+	 * Creates a new GraphicsController object that paints the specified board.
+	 * 
+	 * @param board The board to paint. Must not be null.
+	 */
 	public GraphicsController(Board board) {
-		board_ = board;
-		whiteImages_ = new HashMap<Piece.PieceType, BufferedImage>(6);
-		blackImages_ = new HashMap<Piece.PieceType, BufferedImage>(6);
-
-		try {
-			whiteImages_.put(Piece.PieceType.PAWN, ImageIO.read(this.getClass().getResource("images/pawn_white.png")));
-			whiteImages_.put(Piece.PieceType.KNIGHT, ImageIO.read(this.getClass().getResource("images/knight_white.png")));
-			whiteImages_.put(Piece.PieceType.BISHOP, ImageIO.read(this.getClass().getResource("images/bishop_white.png")));
-			whiteImages_.put(Piece.PieceType.ROOK, ImageIO.read(this.getClass().getResource("images/rook_white.png")));
-			whiteImages_.put(Piece.PieceType.QUEEN, ImageIO.read(this.getClass().getResource("images/queen_white.png")));
-			whiteImages_.put(Piece.PieceType.KING, ImageIO.read(this.getClass().getResource("images/king_white.png")));
-
-			blackImages_.put(Piece.PieceType.PAWN, ImageIO.read(this.getClass().getResource("images/pawn_black.png")));
-			blackImages_.put(Piece.PieceType.KNIGHT, ImageIO.read(this.getClass().getResource("images/knight_black.png")));
-			blackImages_.put(Piece.PieceType.BISHOP, ImageIO.read(this.getClass().getResource("images/bishop_black.png")));
-			blackImages_.put(Piece.PieceType.ROOK, ImageIO.read(this.getClass().getResource("images/rook_black.png")));
-			blackImages_.put(Piece.PieceType.QUEEN, ImageIO.read(this.getClass().getResource("images/queen_black.png")));
-			blackImages_.put(Piece.PieceType.KING, ImageIO.read(this.getClass().getResource("images/king_black.png")));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		System.out.println("Class loarder: " + classLoader);
-		InputStream inputBoard = classLoader.getResourceAsStream("images/board.png");
-		// black lost pieces
-		InputStream inputBlackPawn = classLoader.getResourceAsStream("images/pawn_black_lost.png");
-		InputStream inputBlackKnight = classLoader.getResourceAsStream("images/knight_black_lost.png");
-		InputStream inputBlackBishop = classLoader.getResourceAsStream("images/bishop_black_lost.png");
-		InputStream inputBlackRook = classLoader.getResourceAsStream("images/rook_black_lost.png");
-		InputStream inputBlackQueen = classLoader.getResourceAsStream("images/queen_black_lost.png");
-		// white lost pieces
-		InputStream inputWhitePawn = classLoader.getResourceAsStream("images/pawn_white_lost.png");
-		InputStream inputWhiteKnight = classLoader.getResourceAsStream("images/knight_white_lost.png");
-		InputStream inputWhiteBishop = classLoader.getResourceAsStream("images/bishop_white_lost.png");
-		InputStream inputWhiteRook = classLoader.getResourceAsStream("images/rook_white_lost.png");
-		InputStream inputWhiteQueen = classLoader.getResourceAsStream("images/queen_white_lost.png");
-
-		try {
-			boardImage_ = ImageIO.read(inputBoard);
-			// black lost pieces
-			blackPawnLostImage_ = ImageIO.read(inputBlackPawn);
-			blackKnightLostImage_ = ImageIO.read(inputBlackKnight);
-			blackBishopLostImage_ = ImageIO.read(inputBlackBishop);
-			blackRookLostImage_ = ImageIO.read(inputBlackRook);
-			blackQueenLostImage_ = ImageIO.read(inputBlackQueen);
-			// white lost pieces
-			whitePawnLostImage_ = ImageIO.read(inputWhitePawn);
-			whiteKnightLostImage_ = ImageIO.read(inputWhiteKnight);
-			whiteBishopLostImage_ = ImageIO.read(inputWhiteBishop);
-			whiteRookLostImage_ = ImageIO.read(inputWhiteRook);
-			whiteQueenLostImage_ = ImageIO.read(inputWhiteQueen);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		setBoard(board);
 	}
 
+	/**
+	 * Sets which board object the GraphicController will paint.
+	 * 
+	 * @param board The board to paint. Must not be null.
+	 */
 	public void setBoard(Board board) {
-		board_ = board;
+		if (board == null) {
+			throw new IllegalArgumentException("The board to paint must not be null.");
+		}
+		this.board = board;
 	}
 
+	/**
+	 * Repaints the board, without calculating new timer values.
+	 */
 	public void renderPieces() {
 		repaint();
 	}
 
+	/**
+	 * Repaints the board, after calculating new timer values.
+	 * 
+	 * @param blackTimeLeft The time left for black.
+	 * @param whiteTimeLeft The time left for white.
+	 */
 	public void renderTimer(int blackTimeLeft, int whiteTimeLeft) {
-		// System.out.println("Render timer");
 		getTimerValues(blackTimeLeft, whiteTimeLeft);
 		repaint();
 	}
 
+	/**
+	 * Converts an amount of time in milliseconds to minutes and seconds.
+	 * 
+	 * @param blackTimeLeft The time left for black.
+	 * @param whiteTimeLeft The time left for white.
+	 */
 	private void getTimerValues(int blackTimeLeft, int whiteTimeLeft) {
-		blackTimer_ = String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(blackTimeLeft),
+		blackTimer = String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(blackTimeLeft),
 				TimeUnit.MILLISECONDS.toSeconds(blackTimeLeft)
 						- TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(blackTimeLeft)));
 
-		whiteTimer_ = String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(whiteTimeLeft),
+		whiteTimer = String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(whiteTimeLeft),
 				TimeUnit.MILLISECONDS.toSeconds(whiteTimeLeft)
 						- TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(whiteTimeLeft)));
-
-		// System.out.println("White timer: " + whiteTimer_);
 	}
 
+	/**
+	 * Paints the HUD bars and the board.
+	 * 
+	 * @param graphic The graphics context in which to draw. Cannot be null.
+	 */
 	public void paintComponent(Graphics graphic) {
+		if (graphic == null) {
+			throw new IllegalArgumentException("The graphics context cannot be  null.");
+		}
 		super.paintComponent(graphic);
-
-		graphic.drawImage(boardImage_, 0, HUD_BAR_HEIGHT, null);
+		graphic.drawImage(boardImage, 0, HUD_BAR_HEIGHT, null);
 		paintHUDBars(graphic);
-		paintBlackLostPieces(graphic);
-		paintWhiteLostPieces(graphic);
-		paintSpaces(graphic);
-		paintPieces(board_.getBlackPieces(), graphic);
-		paintPieces(board_.getWhitePieces(), graphic);
+		board.paint(graphic);
 	}
 
+	/**
+	 * Paints the HUD bars for both white and black.
+	 * 
+	 * @param graphic The graphics context in which to draw the bars. Must not be null.
+	 */
 	private void paintHUDBars(Graphics graphic) {
 		// Paint the black HUD bar
 		graphic.setColor(Color.LIGHT_GRAY);
-		graphic.fillRect(0, 0, 512, HUD_BAR_HEIGHT);
+		graphic.fillRect(0, 0, Game.WIDTH, HUD_BAR_HEIGHT);
 		graphic.setColor(Color.BLACK);
-		graphic.drawString("Time Remaining: " + blackTimer_, 5, 15);
+		graphic.drawString("Time Remaining: " + blackTimer, TIMER_START_X, BLACK_TIMER_START_Y);
 
 		// paint the white HUD bar
 		graphic.setColor(Color.WHITE);
-		graphic.fillRect(0, 576 - HUD_BAR_HEIGHT, 512, HUD_BAR_HEIGHT);
+		graphic.fillRect(0, WHITE_HUD_START_Y, Game.WIDTH, HUD_BAR_HEIGHT);
 		graphic.setColor(Color.BLACK);
-		graphic.drawString("Time Remaining: " + whiteTimer_, 5, 548);
+		graphic.drawString("Time Remaining: " + whiteTimer, TIMER_START_X, WHITE_TIMER_START_Y);
 	}
-
-	private void paintBlackLostPieces(Graphics graphic) {
-		int blackLostPawns = board_.getBlackPawnsLost();
-		for (int i = 0; i < blackLostPawns; i++) {
-			graphic.drawImage(blackPawnLostImage_, LOST_PIECE_START_X + 15 * i, 3, null);
-		}
-
-		int blackLostKnights = board_.getBlackKnightsLost();
-		for (int i = 0; i < blackLostKnights; i++) {
-			graphic.drawImage(blackKnightLostImage_, LOST_PIECE_START_X + 15 * blackLostPawns + 15 * i, 3, null);
-		}
-
-		int blackLostBishops = board_.getBlackBishopsLost();
-		for (int i = 0; i < blackLostBishops; i++) {
-			graphic.drawImage(blackBishopLostImage_,
-					LOST_PIECE_START_X + 15 * blackLostPawns + 15 * blackLostKnights + 17 * i, 3, null);
-		}
-
-		int blackLostRooks = board_.getBlackRooksLost();
-		for (int i = 0; i < blackLostRooks; i++) {
-			graphic.drawImage(blackRookLostImage_,
-					LOST_PIECE_START_X + 15 * blackLostPawns + 15 * blackLostKnights + 17 * blackLostBishops + 15 * i,
-					3, null);
-		}
-
-		int blackLostQueens = board_.getBlackQueensLost();
-		for (int i = 0; i < blackLostQueens; i++) {
-			graphic.drawImage(blackQueenLostImage_, LOST_PIECE_START_X + 15 * blackLostPawns + 15 * blackLostKnights
-					+ 17 * blackLostBishops + 15 * blackLostRooks + 15 * i, 3, null);
-		}
-	}
-
-	private void paintWhiteLostPieces(Graphics graphic) {
-		int whiteLostPawns = board_.getWhitePawnsLost();
-		for (int i = 0; i < whiteLostPawns; i++) {
-			graphic.drawImage(whitePawnLostImage_, LOST_PIECE_START_X + 15 * i, 536, null);
-		}
-
-		int whiteLostKnights = board_.getWhiteKnightsLost();
-		for (int i = 0; i < whiteLostKnights; i++) {
-			graphic.drawImage(whiteKnightLostImage_, LOST_PIECE_START_X + 15 * whiteLostPawns + 15 * i, 536, null);
-		}
-
-		int whiteLostBishops = board_.getWhiteBishopsLost();
-		for (int i = 0; i < whiteLostBishops; i++) {
-			graphic.drawImage(whiteBishopLostImage_,
-					LOST_PIECE_START_X + 15 * whiteLostPawns + 15 * whiteLostKnights + 17 * i, 536, null);
-		}
-
-		int whiteLostRooks = board_.getWhiteRooksLost();
-		for (int i = 0; i < whiteLostRooks; i++) {
-			graphic.drawImage(whiteRookLostImage_,
-					LOST_PIECE_START_X + 15 * whiteLostPawns + 15 * whiteLostKnights + 17 * whiteLostBishops + 15 * i,
-					536, null);
-		}
-
-		int whiteLostQueens = board_.getWhiteQueensLost();
-		for (int i = 0; i < whiteLostQueens; i++) {
-			graphic.drawImage(whiteQueenLostImage_, LOST_PIECE_START_X + 15 * whiteLostPawns + 15 * whiteLostKnights
-					+ 17 * whiteLostBishops + 15 * whiteLostRooks + 15 * i, 536, null);
-		}
-	}
-
-	private void paintPieces(ArrayList<Piece> piecesToDraw, Graphics graphic) {
-		for (int i = 0; i < piecesToDraw.size(); i++) {
-			Piece piece = piecesToDraw.get(i);
-			if (!piece.isCaptured()) {
-				BufferedImage image;
-				if (piece.isWhite())
-					image = whiteImages_.get(piece.getType());
-				else
-					image = blackImages_.get(piece.getType());
-
-				int row = piece.getRow();
-				int col = piece.getCol();
-				int width = image.getWidth(null);
-				int height = image.getHeight(null);
-
-				int x = (col * 64) + (64 - width) / 2;
-				int y = (row * 64) + (64 - height) / 2;
-
-				graphic.drawImage(image, x, y + HUD_BAR_HEIGHT, null);
-			}
-		}
-	}
-
-	private void paintSpaces(Graphics graphic) {
-		Graphics2D g2 = (Graphics2D) graphic;
-		float thickness = 2;
-		Stroke oldStroke = g2.getStroke();
-		g2.setStroke(new BasicStroke(thickness));
-
-		for (int r = 0; r <= Board.MAX_ROW; r++) {
-			for (int c = 0; c <= Board.MAX_COL; c++) {
-				Space space = board_.getSpace(r, c);
-				if (space.isSelected()) {
-					graphic.setColor(Color.GREEN);
-					graphic.drawRect(space.getCol() * 64, space.getRow() * 64 + HUD_BAR_HEIGHT, 64, 64);
-				} else if ((space.isPossibleMove() && space.getPiece() != null) || space.isTakingMove()) {
-					graphic.setColor(Color.RED);
-					graphic.drawRect(space.getCol() * 64, space.getRow() * 64 + HUD_BAR_HEIGHT, 64, 64);
-				} else if (space.isPossibleMove()) {
-					graphic.setColor(Color.BLUE);
-					graphic.drawRect(space.getCol() * 64, space.getRow() * 64 + HUD_BAR_HEIGHT, 64, 64);
-				}
-			}
-		}
-
-		g2.setStroke(oldStroke);
-	}
-
 }
