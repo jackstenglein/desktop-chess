@@ -11,12 +11,27 @@ public class Move {
 	private Piece capturedPiece;
 	private Space source;
 	private Space dest;
+	
+	
+	/**
+	 * Creates a new Move object with the given parameters. This object is
+	 * immutable. This is equivalent to the call 
+	 * Move(movedPiece, dest.getPiece(), source, dest).
+	 * 
+	 * @param movedPiece
+	 *            The Piece that is being moved. May not be null.
+	 * @param source
+	 *            The Space movedPiece originally started from. May not be null.
+	 * @param dest
+	 *            The Space movedPiece will end at. May not be null.
+	 */
+	public Move(Piece movedPiece, Space source, Space dest) {
+		this(movedPiece, dest.getPiece(), source, dest);
+	}
 
 	/**
 	 * Creates a new Move object with the given parameters. This object is
-	 * immutable.<br>
-	 * pre: movedPiece != null, source != null, dest != null<br>
-	 * O(1)
+	 * immutable.
 	 * 
 	 * @param movedPiece
 	 *            The Piece that is being moved. May not be null.

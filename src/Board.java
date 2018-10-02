@@ -1,6 +1,5 @@
 import java.awt.Graphics;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import javax.swing.JOptionPane;
 
@@ -15,12 +14,18 @@ public class Board {
 	public static final int MIN_ROW = 0, MIN_COL = 0;
 	public static final int MAX_ROW = 7, MAX_COL = 7;
 	
-	// starting columns for pieces
+	// starting positions for pieces
 	private static final int[] ROOK_COLUMNS = new int[] {MIN_COL, MAX_COL};
 	private static final int[] KNIGHT_COLUMNS = new int[] {1, 6};
 	private static final int[] BISHOP_COLUMNS = new int[] {2, 5};
 	private static final int QUEEN_COLUMN = 3;
 	private static final int KING_COLUMN = 4;
+	private static final int WHITE_PAWN_START_ROW = 6;
+	private static final int BLACK_PAWN_START_ROW = 1;
+	private static final int WHITE_EN_PASSANT_ROW = 3;
+	private static final int BLACK_EN_PASSANT_ROW = 4;
+	private static final int[] KINGSIDE_CASTLE = new int[] {5, 6};
+	private static final int[] QUEENSIDE_CASTLE = new int[] {1, 3, 2}; 
 
 	// instance variables
 	private Space[][] spaces;
@@ -113,6 +118,17 @@ public class Board {
 		}
 		return pawns;
 	}
+	
+	/**
+	 * Returns true if the given row and column are on the board.
+	 * 
+	 * @param row The row to check.
+	 * @param col The column to check.
+	 * @return True if the row and column are on the board.
+	 */
+	public boolean isValid(int row, int col) {
+		return row >= MIN_ROW && row <= MAX_ROW && col >= MIN_COL && col <= MAX_COL;
+	}
 
 	/**
 	 * Return the Space at the specified row and col. <br>
@@ -137,19 +153,20 @@ public class Board {
 	 * the specified Piece and Board. 
 	 * 
 	 * @param piece The Piece to get Moves for. May not be null.
-	 * @param checkCastling  A boolean indicating whether to check for castling moves.
+	 * @param checkCastling A boolean indicating whether to check for castling moves.
 	 * @return An ArrayList of legal Moves for the given piece.
 	 */
 	public ArrayList<Move> findLegalMoves(Piece piece, boolean checkCastling) {
-		// System.out.println("Find legal moves.");
+		if (piece.isCaptured()) {
+			return new ArrayList<Move>();
+		}
 		ArrayList<Move> legalMoves = findAvailableMoves(piece, checkCastling);
 		removeSameColoredMoves(legalMoves, piece.isWhite());
-		for (int i = 0; i < legalMoves.size(); i++)
+		for (int i = legalMoves.size() - 1; i >= 0; i--) {
 			if (isCheckAfterMove(legalMoves.get(i))) {
 				legalMoves.remove(i);
-				i--;
 			}
-
+		}
 		return legalMoves;
 	}
 	
@@ -166,15 +183,11 @@ public class Board {
 		// loop through all the moves, get the capturedPiece.
 		// If it exists and is the same color as the piece being moved,
 		// remove the move from the list.
-		for (int i = 0; i < availableMoves.size(); i++) {
-			Move move = availableMoves.get(i);
-			if (move == null)
-				System.out.println("Move is null for some reason?");
+		for (int i = availableMoves.size() - 1; i >= 0; i--) {
 			Piece piece = availableMoves.get(i).getCapturedPiece();
 			if (piece != null && piece.isWhite() == pieceIsWhite) {
 				availableMoves.get(i).getDestination().setTakingMove(false);
 				availableMoves.remove(i);
-				i--;
 			}
 		}
 	}
@@ -204,56 +217,38 @@ public class Board {
 	 * @return True if the specified team is checkmated.
 	 */
 	public boolean isCheckMate(boolean isWhite) {
-		int i = 0;
-		ArrayList<Piece> pieces = isWhite ? whitePieces : blackPieces;
-	
-		while (i < pieces.size()) {
-			// get the legal moves for this Piece
-			ArrayList<Move> movesPreCheck = findLegalMoves(pieces.get(i), true);
-			for (int j = 0; j < movesPreCheck.size(); j++) {
-				// found a move that isn't still in check, return false
-				if (!isCheckAfterMove(movesPreCheck.get(j))) {
-					return false;
-				}
-			}
-
-			/*if (pieces.get(i).getType() == Piece.PieceType.PAWN) {
-				Move enPassantMove = findAvailableEnPassantMove(pieces.get(i));
-				if (enPassantMove != null && !isCheckAfterMove(enPassantMove))
-					return false;
-			}*/
-
-			i++;
+		if (!isCheck(isWhite)) {
+			return false;
 		}
-
+		
+		ArrayList<Piece> pieces = isWhite ? whitePieces : blackPieces;
+		for (Piece piece : pieces) {
+			ArrayList<Move> moves = findLegalMoves(piece, true);
+			if (moves.size() > 0) {
+				return false;
+			}
+		}
+		
 		return true;
 	}
 	
 	/**
-	 * Helper method for findLegalMoves and findDefenders that returns an
-	 * ArrayList of Move objects that represent all possible moves for the
-	 * specified Piece and Board, regardless of whether the Piece captures
-	 * another Piece of its own color.
+	 * Helper method for findLegalMoves that returns an
+	 * ArrayList of moves for the specified piece, regardless 
+	 * of whether the piece captures another piece of its own color.
 	 * 
 	 * @param piece The Piece to get moves for. May not be null.
-	 * @param checkCastling  A boolean indicating whether to check for castling moves.
-	 * @return An ArrayList of all Moves for the given piece, regardless of the color of capture.
+	 * @param checkCastling A boolean indicating whether to check for castling moves.
+	 * @return An ArrayList of all moves for the given piece, regardless of the color of capture.
 	 */
 	private ArrayList<Move> findAvailableMoves(Piece piece, boolean checkCastling) {
 		ArrayList<Move> availableMoves = new ArrayList<Move>();
 
 		Piece.PieceType pieceType = piece.getType();
-		int pieceRow = piece.getRow();
-		int pieceCol = piece.getCol();
-		boolean pieceIsWhite = piece.isWhite();
 		
 		switch(pieceType) {
 			case PAWN:
-				availableMoves = findAvailablePawnMoves(pieceRow, pieceCol, pieceIsWhite);
-				Move enPassant = findAvailableEnPassantMove(piece);
-				if (enPassant != null) {
-					availableMoves.add(enPassant);
-				}
+				availableMoves = findAvailablePawnMoves(piece);
 				break;
 			case KNIGHT:
 				availableMoves = findAvailableKnightMoves(piece);
@@ -277,98 +272,83 @@ public class Board {
 	
 	/**
 	 * Returns the available moves for a pawn at a given space on the board and
-	 * its color, regardless of whether it would capture a Piece on its own
+	 * its color, regardless of whether it would capture a piece on its own
 	 * team.
 	 * 
-	 * @param pieceRow The row the pawn is on.
-	 * @param pieceCol The col the pawn is on.
-	 * @param pieceIsWhite A boolean indicating whether the piece is white or not.
+	 * @param pawn The pawn to check moves for. Must not be null. 
 	 * @return An ArrayList of moves for the pawn.
 	 */
-	private ArrayList<Move> findAvailablePawnMoves(int pieceRow, int pieceCol, boolean pieceIsWhite) {
+	private ArrayList<Move> findAvailablePawnMoves(Piece pawn) {
 
 		ArrayList<Move> availablePawnMoves = new ArrayList<Move>();
-		Space source = spaces[pieceRow][pieceCol];
-		int rowChange;
-		int startingRow;
-
-		// check if piece is white
-		if (pieceIsWhite) {
-			rowChange = -1;
-			startingRow = 6;
-		}
-		// piece is black
-		else {
-			rowChange = 1;
-			startingRow = 1;
-		}
+		int row = pawn.getRow();
+		int col = pawn.getCol();
+		Space source = spaces[row][col];
+		int rowChange = pawn.isWhite() ? -1 : 1;
 
 		// if space above is empty, add as possible move
-		Space dest = spaces[pieceRow + rowChange][pieceCol];
-		if (dest.isEmpty()) {
-
+		Space dest = getSpace(row + rowChange, col);
+		if (dest != null && dest.isEmpty()) {
 			availablePawnMoves.add(new Move(source.getPiece(), dest.getPiece(), source, dest));
 
 			// check if still on starting row
-			if (pieceRow == startingRow) {
+			final int startingRow = pawn.isWhite() ? WHITE_PAWN_START_ROW : BLACK_PAWN_START_ROW;
+			if (row == startingRow) {
 				// if space two above is empty, add as a possible move
-				dest = spaces[pieceRow + 2 * rowChange][pieceCol];
-				if (dest.isEmpty())
+				dest = spaces[row + 2 * rowChange][col];
+				if (dest.isEmpty()) {
 					availablePawnMoves.add(new Move(source.getPiece(), dest.getPiece(), source, dest));
+				}
 			}
 		}
 
 		// check if space diagonal left is on board and not empty
-		dest = getSpace(pieceRow + rowChange, pieceCol - 1);
-		if (dest != null && !dest.isEmpty())
+		dest = getSpace(row + rowChange, col - 1);
+		if (dest != null && !dest.isEmpty()) {
 			availablePawnMoves.add(new Move(source.getPiece(), dest.getPiece(), source, dest));
+		}
 
 		// check if space diagonal right is on board and not empty
-		dest = getSpace(pieceRow + rowChange, pieceCol + 1);
-		if (dest != null && !dest.isEmpty())
+		dest = getSpace(row + rowChange, col + 1);
+		if (dest != null && !dest.isEmpty()) {
 			availablePawnMoves.add(new Move(source.getPiece(), dest.getPiece(), source, dest));
+		}
+		
+		Move enPassant = findAvailableEnPassantMove(pawn);
+		if (enPassant != null) {
+			availablePawnMoves.add(enPassant);
+		}
 
 		return availablePawnMoves;
 	}
 	
 	/**
 	 * Returns the available en passant Move for a pawn (there will always be
-	 * only one).
+	 * at most only one).
 	 * 
 	 * @param pawn The pawn to find en passant for. May not be null.
 	 * @return The available en passant Move or null if none exist.
 	 */
 	public Move findAvailableEnPassantMove(Piece pawn) {
 		int pieceRow = pawn.getRow();
-		int pieceCol = pawn.getCol();
-		Space source = spaces[pieceRow][pieceCol];
 		
 		// the row a pawn has to be on 
 		// for en passant to be possible
-		int magicRow; 
-		int rowChange;
+		int magicRow = pawn.isWhite() ? WHITE_EN_PASSANT_ROW : BLACK_EN_PASSANT_ROW;
+		if (pieceRow != magicRow) {
+			return null;
+		}
 		
-		if (pawn.isWhite())
-		{
-			rowChange = -1;
-			magicRow = 3;
-		}
-		else
-		{
-			rowChange = 1;
-			magicRow = 4;
-		}
-
+		int pieceCol = pawn.getCol();
+		int rowChange = pawn.isWhite() ? -1 : 1;
+		
 		// check for en passant to the right
 		Space spaceRight = getSpace(pieceRow, pieceCol + 1);
 		if (spaceRight != null) {
-			//System.out.println("Check en passant right");
 			Piece pieceRight = spaceRight.getPiece();
-			//System.out.println("Piece right: " + pieceRight);
-			if (pieceRow == magicRow && pieceRight != null && pieceRight.getType() == Piece.PieceType.PAWN
+			if (pieceRight != null && pieceRight.getType() == Piece.PieceType.PAWN
 					&& pieceRight.getTimesMoved() == 1 && pieceRight.hasJustMoved()) {
-				//System.out.println("found en passant.");
-				return new Move(pawn, pieceRight, source, getSpace(pieceRow + rowChange, pieceCol + 1));
+				return new Move(pawn, pieceRight, spaces[pieceRow][pieceCol], getSpace(pieceRow + rowChange, pieceCol + 1));
 			}
 		}
 
@@ -376,10 +356,9 @@ public class Board {
 		Space spaceLeft = getSpace(pieceRow, pieceCol - 1);
 		if (spaceLeft != null) {
 			Piece pieceLeft = spaceLeft.getPiece();
-			if (pieceRow == magicRow && pieceLeft != null && pieceLeft.getType() == Piece.PieceType.PAWN
+			if (pieceLeft != null && pieceLeft.getType() == Piece.PieceType.PAWN
 					&& pieceLeft.getTimesMoved() == 1 && pieceLeft.hasJustMoved()) {
-				//System.out.println("found en passant.");
-				return new Move(pawn, pieceLeft, source, getSpace(pieceRow + rowChange, pieceCol - 1));
+				return new Move(pawn, pieceLeft, spaces[pieceRow][pieceCol], getSpace(pieceRow + rowChange, pieceCol - 1));
 			}
 		}
 
@@ -395,52 +374,21 @@ public class Board {
 	 */
 	private ArrayList<Move> findAvailableKnightMoves(Piece knight) {
 		ArrayList<Move> availableKnightMoves = new ArrayList<Move>();
-
+		int row = knight.getRow();
+		int col = knight.getCol();
+		
 		// Eight positions to check for a knight,
 		// will start at 1 o'clock and go clockwise
-		int pieceRow = knight.getRow();
-		int pieceCol = knight.getCol();
-		Space source = spaces[pieceRow][pieceCol];
-
-		// Position 1
-		Space dest = getSpace(pieceRow - 2, pieceCol + 1);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 2
-		dest = getSpace(pieceRow - 1, pieceCol + 2);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 3
-		dest = getSpace(pieceRow + 1, pieceCol + 2);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 4
-		dest = getSpace(pieceRow + 2, pieceCol + 1);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 5
-		dest = getSpace(pieceRow + 2, pieceCol - 1);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 6
-		dest = getSpace(pieceRow + 1, pieceCol - 2);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 7
-		dest = getSpace(pieceRow - 1, pieceCol - 2);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
-
-		// Position 8
-		dest = getSpace(pieceRow - 2, pieceCol - 1);
-		if (dest != null)
-			availableKnightMoves.add(new Move(knight, dest.getPiece(), source, dest));
+		final int[] rowChanges = new int[] { -2, -1, 1, 2,  2,  1, -1, -2};
+		final int[] colChanges = new int[] {  1,  2, 2, 1, -1, -2, -2, -1};
+		
+		Space source = spaces[row][col];
+		for (int i = 0; i < rowChanges.length; i++) {
+			Space dest = getSpace(row + rowChanges[i], col + colChanges[i]);
+			if (isValid(row + rowChanges[i], col + colChanges[i])) {
+				availableKnightMoves.add(new Move(knight, source, dest));
+			}
+		}
 
 		return availableKnightMoves;
 	}
@@ -542,53 +490,23 @@ public class Board {
 	 */
 	private ArrayList<Move> findAvailableKingMoves(Piece king, boolean checkCastling) {
 		ArrayList<Move> availableKingMoves = new ArrayList<Move>();
-
+		int row = king.getRow();
+		int col = king.getCol();
+		
 		// A king can move to each of the eight surrounding squares
 		// Will check starting at 1 o'clock and go clockwise
-		int pieceRow = king.getRow();
-		int pieceCol = king.getCol();
-		Space source = spaces[pieceRow][pieceCol];
+		final int[] rowChanges = new int[] {-1, 0, 1, 1,  1, 0,  -1, -1};
+		final int[] colChanges = new int[] { 1, 1, 1, 0, -1, -1, -1,  0};
+		
+		Space source = spaces[row][col];
+		for (int i = 0; i < rowChanges.length; i++) {
+			Space dest = getSpace(row + rowChanges[i], col + colChanges[i]);
+			if (dest != null) {
+				availableKingMoves.add(new Move(king, source, dest));
+			}
+		}
+		
 		boolean pieceIsWhite = king.isWhite();
-
-		// Position 1:
-		Space dest = getSpace(pieceRow - 1, pieceCol + 1);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 2:
-		dest = getSpace(pieceRow, pieceCol + 1);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 3:
-		dest = getSpace(pieceRow + 1, pieceCol + 1);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 4:
-		dest = getSpace(pieceRow + 1, pieceCol);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 5:
-		dest = getSpace(pieceRow + 1, pieceCol - 1);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 6:
-		dest = getSpace(pieceRow, pieceCol - 1);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 7:
-		dest = getSpace(pieceRow - 1, pieceCol - 1);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
-
-		// Position 8:
-		dest = getSpace(pieceRow - 1, pieceCol);
-		if (dest != null)
-			availableKingMoves.add(new Move(king, dest.getPiece(), source, dest));
 
 		// Now we check for castling. Five things must be true to castle.
 		// 1: King cannot have moved
@@ -600,25 +518,29 @@ public class Board {
 
 		if (checkCastling) {
 			// Check kingside first
-			Piece rook = getSpace(pieceRow, Board.MAX_COL).getPiece();
-			Space space1 = getSpace(pieceRow, 5);
-			dest = getSpace(pieceRow, 6);
-			if (king.getTimesMoved() == 0 && !isCheck(pieceIsWhite) && rook != null && rook.getTimesMoved() == 0
-					&& space1.isEmpty() && dest.isEmpty()
-					&& findPiecesAttackingSpace(space1, pieceIsWhite).size() == 0
-					&& findPiecesAttackingSpace(dest, pieceIsWhite).size() == 0)
-				availableKingMoves.add(new Move(king, null, source, dest));
+			Piece rook = getSpace(row, Board.MAX_COL).getPiece();
+			Space intermediateSpace = getSpace(row, KINGSIDE_CASTLE[0]);
+			Space dest = getSpace(row, KINGSIDE_CASTLE[1]);
+			if (king.getTimesMoved() == 0 && rook != null && rook.getTimesMoved() == 0
+					&& intermediateSpace.isEmpty() && dest.isEmpty()
+					&& findPiecesAttackingSpaces(new Space[] { source, intermediateSpace, dest }, pieceIsWhite).size() == 0)
+					//&& !isCheck(pieceIsWhite)
+					//&& findPiecesAttackingSpace(intermediateSpace, pieceIsWhite).size() == 0
+					//&& findPiecesAttackingSpace(dest, pieceIsWhite).size() == 0)
+				availableKingMoves.add(new Move(king, source, dest));
 
 			// Now check queenside
-			rook = getSpace(pieceRow, Board.MIN_COL).getPiece();
-			space1 = getSpace(pieceRow, 3);
-			dest = getSpace(pieceRow, 2);
-			Space space3 = getSpace(pieceRow, 1);
-			if (king.getTimesMoved() == 0 && !isCheck(pieceIsWhite) && rook != null && rook.getTimesMoved() == 0
-					&& space1.isEmpty() && dest.isEmpty() && space3.isEmpty()
-					&& findPiecesAttackingSpace(space1, pieceIsWhite).size() == 0
-					&& findPiecesAttackingSpace(dest, pieceIsWhite).size() == 0)
-				availableKingMoves.add(new Move(king, null, source, dest));
+			rook = getSpace(row, Board.MIN_COL).getPiece();
+			intermediateSpace = getSpace(row, QUEENSIDE_CASTLE[1]);
+			Space intermediateSpaceRook = getSpace(row, QUEENSIDE_CASTLE[0]);
+			dest = getSpace(row, QUEENSIDE_CASTLE[2]);
+			if (king.getTimesMoved() == 0 && rook != null && rook.getTimesMoved() == 0
+					&& intermediateSpace.isEmpty() && dest.isEmpty() && intermediateSpaceRook.isEmpty()
+					&& findPiecesAttackingSpaces(new Space[] { source, intermediateSpace, dest }, pieceIsWhite).size() == 0)
+					//&& !isCheck(pieceIsWhite) 
+					//&& findPiecesAttackingSpace(intermediateSpace, pieceIsWhite).size() == 0
+					//&& findPiecesAttackingSpace(dest, pieceIsWhite).size() == 0)
+				availableKingMoves.add(new Move(king, source, dest));
 		}
 
 		return availableKingMoves;
@@ -649,10 +571,10 @@ public class Board {
 	 */
 	public ArrayList<Piece> findPiecesAttackingSpace(Space spaceToCheck, boolean isWhite) {
 		if (spaceToCheck == null) {
-			throw new IllegalArgumentException("Space and board may not be null.");
+			throw new IllegalArgumentException("The space to check may not be null.");
 		}
 
-		ArrayList<Piece> piecesAttacking = new ArrayList<Piece>();
+		/*ArrayList<Piece> piecesAttacking = new ArrayList<Piece>();
 		ArrayList<Piece> opposingTeam = isWhite ? blackPieces : whitePieces;
 
 		// Check the attacking pieces to see if the current piece occupies a
@@ -671,6 +593,45 @@ public class Board {
 		}
 
 		Collections.sort(piecesAttacking);
+		return piecesAttacking;*/
+		return findPiecesAttackingSpaces(new Space[] {spaceToCheck}, isWhite);
+	}
+	
+	/**
+	 * Returns an ArrayList of pieces of the given color that can attack any of the
+	 * given spaces on the board.
+	 * 
+	 * @param spacesToCheck The spaces to find attackers for. May not be null.
+	 * @param isWhite A boolean indicating whether to search for white or black
+	 *            attackers.
+	 * @return An ArrayList of pieces attacking the given spaces, sorted by increasing
+	 *         order of value.
+	 */
+	public ArrayList<Piece> findPiecesAttackingSpaces(Space[] spacesToCheck, boolean isWhite) {
+		if (spacesToCheck == null) {
+			throw new IllegalArgumentException("The spaces to check must not be null.");
+		}
+		
+		ArrayList<Piece> piecesAttacking = new ArrayList<Piece>();
+		ArrayList<Piece> opposingTeam = isWhite ? blackPieces : whitePieces;
+		
+		// Check the opposing team to see if any pieces could move to one of the spaces.
+		// You cannot capture with castling, so don't check castling moves.
+		for (Piece piece : opposingTeam) {
+			if (!piece.isCaptured()) {
+				ArrayList<Move> moves = findAvailableMoves(piece, false);
+				for (int j = 0; j < moves.size(); j++) {
+					for (Space spaceToCheck : spacesToCheck) {
+						if (moves.get(j).getDestination().equals(spaceToCheck)) {
+							piecesAttacking.add(piece);
+							j = moves.size();
+							break;
+						}
+					}
+				}
+			}
+		}
+		
 		return piecesAttacking;
 	}
 	
@@ -699,26 +660,14 @@ public class Board {
 	 * Returns an ArrayList of available moves based on the given piece
 	 * position, color and direction to check. Loop exit condition is based on
 	 * whether the Space is open or not. If the piece attacks a piece of its own
-	 * color, that Move will be added to the ArrayList as well. <br>
-	 * pre: rowChange == -1 || 0 || 1 and colChange == -1 || 0 || 1
+	 * color, that Move will be added to the ArrayList as well. 
 	 * 
-	 * @param piece
-	 *            The Piece to move. May not be null.
-	 * @param rowChange
-	 *            The increment for the row value when looping.
-	 * @param colChange
-	 *            The increment for the col value when looping.
-	 * @return An ArrayList of available Moves for the Piece.
+	 * @param piece The Piece to move. May not be null.
+	 * @param rowChange The increment for the row value when looping. Must be -1, 0 or 1.
+	 * @param colChange The increment for the col value when looping. Must be -1, 0 or 1.
+	 * @return An ArrayList of available moves for the piece.
 	 */
 	private ArrayList<Move> findAvailableLoopMoves(Piece piece, int rowChange, int colChange) {
-		//System.out.println("Find available loop moves.");
-
-		// check preconditions
-		if (!((rowChange == -1 || rowChange == 0 || rowChange == 1)
-				&& (colChange == -1 || colChange == 0 || colChange == 1)))
-			throw new IllegalArgumentException("Row change and col change must be equal to -1, 0 or 1. Row change: "
-					+ rowChange + ", col change: " + colChange);
-
 		// get the Piece's current position/Space
 		ArrayList<Move> availableLoopMoves = new ArrayList<Move>();
 		int pieceRow = piece.getRow();
@@ -726,20 +675,19 @@ public class Board {
 		Space source = spaces[pieceRow][pieceCol];
 
 		// loop through the Spaces along the given path. If they are empty,
-		// add the Move to the list and keep going. If not empty, add and stop.
-		boolean spaceWasOpen = true;
+		// add the move to the list and keep going. If not empty, add and stop.
 		int r = pieceRow + rowChange;
 		int c = pieceCol + colChange;
-		while (spaceWasOpen) {
-			if (r >= MIN_ROW && r <= MAX_ROW && c >= MIN_COL && c<= MAX_COL) {
-				Space dest = getSpace(r, c);
-				spaceWasOpen = dest != null && dest.isEmpty();
-				availableLoopMoves.add(new Move(piece, dest.getPiece(), source, dest));
-				r += rowChange;
-				c += colChange;
-			} else
-				spaceWasOpen = false;
-		}
+		Space dest;
+		do {
+			dest = getSpace(r, c);
+			if (dest == null) {
+				break;
+			}
+			availableLoopMoves.add(new Move(piece, source, dest));
+			r += rowChange;
+			c += colChange;
+		} while (dest.isEmpty());
 
 		return availableLoopMoves;
 	}
